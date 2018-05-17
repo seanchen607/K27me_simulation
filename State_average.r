@@ -1,4 +1,4 @@
-setwd("~/Desktop/Histone_Mark_Modeling/")
+setwd("~/Desktop/Histone_Mark_Simulation/Images/new/")
 options(scipen=999)
 mysamp <- function(n, m, s, lwr, upr, nnorm) {
   samp <- rnorm(nnorm, m, s)
@@ -12,7 +12,7 @@ mysamp <- function(n, m, s, lwr, upr, nnorm) {
 nnuc=500
 ### prc2 initiation
 prc2=0
-prc2hl=20
+mitosis=10
 burden12=0.00
 burden23=0.55
 # population initiation
@@ -28,10 +28,10 @@ finalz$me3[n]=0
 }
 
 
-passages<- data.frame(matrix(nrow = nnuc,ncol = (3*prc2hl)))
+passages<- data.frame(matrix(nrow = nnuc,ncol = (3*mitosis)))
 passcolnames<-c()
 #passcolnames<-c("N")
-for (i in 1:prc2hl){
+for (i in 1:mitosis){
 #  passcolnames<-c(passcolnames,paste(i,"me0",sep="_"))
   passcolnames<-c(passcolnames,paste(i,"me1",sep="_"))
   passcolnames<-c(passcolnames,paste(i,"me2",sep="_"))
@@ -47,7 +47,7 @@ colnames(passages)<-passcolnames
 
 
 
- for (cell in 1:20)  {
+ for (cell in 1:50)  {
    set.seed(cell)
    ### Creating Naked Chromatin
    chromatin<-data.frame(integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc))
@@ -82,10 +82,11 @@ colnames(passages)<-passcolnames
 
 
     ### Runs of PRC2
-    for (prc2 in 1:prc2hl) {
+    for (prc2 in 1:mitosis) {
       ### Depositing marks
       for (n in 1:nnuc)
         {
+        
         padd1[n]=mysamp(n=1, m=0.69, s=0.1, lwr=0, upr=1, nnorm=100)
         padd2[n]=mysamp(n=1, m=0.01, s=0.1, lwr=0, upr=1, nnorm=100)
         padd3[n]=mysamp(n=1, m=0.00, s=0.1, lwr=0, upr=1, nnorm=100)
@@ -232,7 +233,7 @@ plot(finalz$me3av,type = "h", ylim = c(0,1), main = paste("K27me3","  -- Average
 #dev.off()
 
 
- for (state in 0:(prc2hl-1))
+ for (state in 0:(mitosis-1))
  {
    png(paste("~/Desktop/Histone_Mark_Simulation/Images/Average_State-",state,"-3marks-average.png",sep=""),width = 800,height = 600)
    par(mfrow=c(3,1))
