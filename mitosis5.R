@@ -49,7 +49,7 @@ final_cell_count=initial_cell_count
 
 for (cell in 1:initial_cell_count)  {
   
-  go_to_next_cell=0
+#  go_to_next_cell=0
   
   ### Creating Naked Chromatin
   chromatin<-data.frame(integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc))
@@ -219,7 +219,7 @@ for (cell in 1:initial_cell_count)  {
   {
     #Adding one to the number of final cell population
     final_cell_count=final_cell_count+1
-    go_to_next_cell=1
+  #  go_to_next_cell=1
     ## Removing the chromatin values already added to the pool (passages) so when we add the values of the daughter chromatins, it won't be doubled
     
     passages[,(colnumber+1)]=passages[,(colnumber+1)]-chromatin$me1
@@ -558,7 +558,7 @@ currentprc2round=prc2
     
   }
   ### End of mitosis
-  if (go_to_next_cell=1) break
+#  if (go_to_next_cell=1) break
   
   
   
