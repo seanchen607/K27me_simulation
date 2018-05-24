@@ -245,15 +245,15 @@ for (n in 1:chromlength)
 for (cell in 1:populationSize){
   depositedchr<-createNakedChromatin(chromlength)
   depositedchr<-deposit(chromatin,chromlength)[["chr"]]
-  i=0
-  while (i < prc2)
+  i=1
+  while (i <= prc2)
   {
     mpopulation[,(i*4)-3]=mpopulation[,(i*4)-3]+depositedchr$me0
     mpopulation[,(i*4)-2]=mpopulation[,(i*4)-2]+depositedchr$me1
     mpopulation[,(i*4)-1]=mpopulation[,(i*4)-1]+depositedchr$me2
     mpopulation[,(i*4)]=mpopulation[,(i*4)]+depositedchr$me3
     ### Check for mitosis
-    if (runif(n=1,min=0,max=1) > 0.85){depositedchr<-mitosis(depositedchr);i=0}
+    if (runif(n=1,min=0,max=1) > 0.85){depositedchr<-mitosis(depositedchr);i=1}
     print (paste("Mitosis - ",cell,":",i,sep=""))
     depositedchr<-deposit(depositedchr,chromlength)[["chr"]]
     i=i+1
@@ -278,5 +278,4 @@ for (i in c(1:prc2))
   dev.off()
   
 }
-
 
