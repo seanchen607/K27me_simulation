@@ -1,18 +1,21 @@
 rm(list=ls())
 options(scipen=999)
 chromlength=1000
-prc2=10
-populationSize=10
+prc2=1
+populationSize=1
+life=100
+
 burden12=0.3
 burden23=0.6
 add1p=0.69
 add2p=0.01
 add3p=0.0
-mitop=0.9
-#newdir=paste("~/Desktop/Histone_Mark_Simulation/",gsub(":","_",gsub(" ","-",date())),"-","chrmlngth_",chromlength,"-prc2_",prc2,"-pop_",populationSize,"-add123_",add1p,"-",add2p,"-",add3p,"-brdn_",burden12,"-",burden23,"-mitop_",mitop,"/",sep = "")
-#system(paste("mkdir -p ",newdir,sep = ""))
-#system(paste("mkdir -p ",newdir,"cell1/",sep = ""))
-#setwd(newdir)
+mitop=0.1
+depop=0.9
+newdir=paste("~/Desktop/Histone_Mark_Simulation/",gsub(":","_",gsub(" ","-",date())),"-","chrmlngth_",chromlength,"-prc2_",prc2,"-pop_",populationSize,"-add123_",add1p,"-",add2p,"-",add3p,"-brdn_",burden12,"-",burden23,"-mitop_",mitop,"/",sep = "")
+system(paste("mkdir -p ",newdir,sep = ""))
+system(paste("mkdir -p ",newdir,"cell1/",sep = ""))
+setwd(newdir)
 
 #### Defining normal distribution with min and max and mean and sd
 mysamp <- function(n, m, s, lwr, upr, nnorm) {
@@ -49,10 +52,10 @@ chromatin<-createNakedChromatin(chromlength)
 prc2hl <- function(nucleosomeNumber,chromSize)
 {
   # PRC2 half-life
-  if (0.3-(nucleosomeNumber/chromSize) < 0){lower=0} else {lower=0.3-(nucleosomeNumber/chromSize)}
-  if (1.3-(nucleosomeNumber/chromSize) > 1){upper=1} else {upper=1.3-(nucleosomeNumber/chromSize)}
-  if (0.8-(nucleosomeNumber/chromSize) < 0){meaner=0} else {meaner=0.8-(nucleosomeNumber/chromSize)}
-  hl=mysamp(n=1, m=meaner, s=0.05, lwr=lower, upr=upper, nnorm=100)
+   if (1-(nucleosomeNumber/chromSize)-(2/10) < 0){lower=0} else {lower=1-(nucleosomeNumber/chromSize)-(2/10)}
+   if (1-(nucleosomeNumber/chromSize)+(2/10) > 1){upper=1} else {upper=1-(nucleosomeNumber/chromSize)+(2/10)}
+   meaner=(upper+lower)/2
+   hl=mysamp(n=1, m=meaner, s=0.1, lwr=lower, upr=upper, nnorm=100)
   return(hl)  
 }
 
@@ -61,12 +64,16 @@ deposit <- function(chr,chromSize)
   for (nucleosomeNumber in 1:chromSize)
   {
     falloff=prc2hl(nucleosomeNumber,chromSize)
-    # print(falloff)
-    add1=mysamp(n=1, m=add1p, s=0.01, lwr=0, upr=1, nnorm=100)*falloff
-    add2=mysamp(n=1, m=add2p, s=0.001, lwr=0, upr=0.1, nnorm=100)*falloff
-    add3=mysamp(n=1, m=add3p, s=0.0, lwr=0, upr=0, nnorm=100)*falloff
+    # add1=mysamp(n=1, m=add1p, s=0.01, lwr=0, upr=1, nnorm=100)*falloff
+    # add2=mysamp(n=1, m=add2p, s=0.001, lwr=0, upr=0.1, nnorm=100)*falloff
+    # add3=mysamp(n=1, m=add3p, s=0.0, lwr=0, upr=0, nnorm=100)*falloff
+    add1=mysamp(n=1, m=add1p*falloff, s=0.01, lwr=0, upr=1, nnorm=100)
+    add2=mysamp(n=1, m=add2p*falloff, s=0.001, lwr=0, upr=0.1, nnorm=100)
+    add3=mysamp(n=1, m=add3p*falloff, s=0.0, lwr=0, upr=0, nnorm=100)
     add0=1-(sum(add1+add2+add3))
-    rando=runif(n=1,min=0,max=100)/100
+    rando=runif(n=1,min=20,max=100)/100
+
+#    print(paste(falloff,add1,add2,add3,rando,sep="  "))
     
     if (chr$S[nucleosomeNumber] == 0)
     {
@@ -158,23 +165,39 @@ mitosis <- function (chromatin){
 
 # creating the initial population 
 population<-list()
-for (p in 1:populationSize)
-{
-  lc=1
-  population[[p]]<-createNakedChromatin(chromlength)
-  while(lc < 10)
-  {
-    print(lc)
-      if (runif(n=1,min=0,max=1) >= 0.1)
-        {
-        population[[p]]<-deposit(population[[p]][["chr"]],chromlength)
-        }
-      if (runif(n=1,min=0,max=1) >= 0.9)
-        {
-        population[[p]][["chr"]]<-mitosis(population[[p]][["chr"]])
-        }
-lc=lc+1
-  }
-}
 
+lifecycle=1
+  
+while(lifecycle <= life)
+{
+print(lifecycle)
+  for (p in 1:populationSize)
+  {
+  print (paste("individual: ",p,sep=""))
+  if (lifecycle==1){population[[p]]<-createNakedChromatin(chromlength)}  
+  for (round in 1:prc2)
+    {
+    if (runif(n=1,min=0,max=1) >= 1-depop)
+      {
+      population[[p]]<-deposit(population[[p]][["chr"]],chromlength)
+      }
+    }
+    if (runif(n=1,min=0,max=1) >= 1-mitop)
+      {
+      population[[p]][["chr"]]<-mitosis(population[[p]][["chr"]])
+      }
+
+    
+    }
+  png(paste("cell1/",lifecycle,".ind.","1","-cycles",lifecycle,"size",chromlength,".png",sep=""),width = 800,height = 600)
+    par(mfrow=c(4,1))
+    plot(population[[1]][["chr"]]$me0,type="h",ylim=c(0,1),ylab = "K36me0", main = paste("Cycle: ",lifecycle," Individual: 1",sep = ""),xlab = "Chromatin")
+    plot(population[[1]][["chr"]]$me1,type="h",ylim=c(0,1),ylab = "K36me1",xlab = "Chromatin")
+    plot(population[[1]][["chr"]]$me2,type="h",ylim=c(0,1),ylab = "K36me2",xlab = "Chromatin")
+    plot(population[[1]][["chr"]]$me3,type="h",ylim=c(0,1),ylab = "K36me3",xlab = "Chromatin")
+  dev.off()
+  
+     lifecycle=lifecycle+1
+    
+}
 
