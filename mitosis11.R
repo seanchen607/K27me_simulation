@@ -216,21 +216,21 @@ currentpop=list("lifecycle"=c(currentpop[["lifecycle"]],lifecycle),"chr"=temp)
 # }
   
 # png(paste("cell1/",lifecycle,".ind.","1","-cycles",lifecycle,"size",chromlength,".png",sep=""),width = 800,height = 600)
-# par(mfrow=c(4,1))
-# plot(population[[1]][["chr"]]$me0,type="h",ylim=c(0,1),ylab = "K36me0", main = paste("Cycle: ",lifecycle," Individual: 1",sep = ""),xlab = "Chromatin")
-# plot(population[[1]][["chr"]]$me1,type="h",ylim=c(0,1),ylab = "K36me1",xlab = "Chromatin")
-# plot(population[[1]][["chr"]]$me2,type="h",ylim=c(0,1),ylab = "K36me2",xlab = "Chromatin")
-# plot(population[[1]][["chr"]]$me3,type="h",ylim=c(0,1),ylab = "K36me3",xlab = "Chromatin")
-# dev.off()
+ par(mfrow=c(4,1))
+ plot(population[[1]][["chr"]]$me0,type="h",ylim=c(0,1),ylab = "K36me0", main = paste("Cycle: ",lifecycle," Individual: 1",sep = ""),xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$me1,type="h",ylim=c(0,1),ylab = "K36me1",xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$me2,type="h",ylim=c(0,1),ylab = "K36me2",xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$me3,type="h",ylim=c(0,1),ylab = "K36me3",xlab = "Chromatin")
+ dev.off()
 # 
 par(mfrow=c(4,1))
-#png(paste(lifecycle,".pop.","-cycles",lifecycle,"size",chromlength,".png",sep=""),width = 800,height = 600)
+png(paste(populationSize,"_pop.","-cycles_",lifecycle,"-chromsize_",chromlength,".png",sep=""),width = 800,height = 600)
 plot((currentpop[["chr"]]$me0)/(populationSize),type="h",ylab = "K36me0", main = paste("Cycle: ",lifecycle,sep = ""),xlab = "Chromatin",ylim=c(0,1))
 plot((currentpop[["chr"]]$me1)/(populationSize),type="h",ylab = "K36me1", xlab = "Chromatin",ylim=c(0,1))
 plot((currentpop[["chr"]]$me2)/(populationSize),type="h",ylab = "K36me2", xlab = "Chromatin",ylim=c(0,1))
 plot((currentpop[["chr"]]$me3)/(populationSize),type="h",ylab = "K36me3", xlab = "Chromatin",ylim=c(0,1))
 
-#dev.off()
+dev.off()
 
 
 lifecycle=lifecycle+1
