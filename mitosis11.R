@@ -2,9 +2,8 @@ rm(list=ls())
 options(scipen=999)
 chromlength=1000
 prc2=1
-populationSize=1
+populationSize=100
 life=100
-
 burden12=0.3
 burden23=0.6
 add1p=0.69
@@ -165,15 +164,31 @@ mitosis <- function (chromatin){
 
 # creating the initial population 
 population<-list()
-
+currentpop<-list()  
+currentpop<-list("lifecycle"=0,"chr"=createNakedChromatin(chromlength)[["chr"]])  
+currentpop[["chr"]]$me0=0
+mitonum=0
 lifecycle=1
-  
 while(lifecycle <= life)
 {
-print(lifecycle)
+
+  temp<-data.frame(integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength))
+  colnames(temp)<-c("N","S","me0","me1","me2","me3")
+  for (s in 1:chromlength)
+  {
+    temp$N[s]=s
+    temp$S[s]=0
+    temp$me0[s]=0
+    temp$me1[s]=0
+    temp$me2[s]=0
+    temp$me3[s]=0
+  }
+  
+  
+  print(lifecycle)
   for (p in 1:populationSize)
   {
-  print (paste("individual: ",p,sep=""))
+#  print (paste("individual: ",p,sep=""))
   if (lifecycle==1){population[[p]]<-createNakedChromatin(chromlength)}  
   for (round in 1:prc2)
     {
@@ -185,19 +200,40 @@ print(lifecycle)
     if (runif(n=1,min=0,max=1) >= 1-mitop)
       {
       population[[p]][["chr"]]<-mitosis(population[[p]][["chr"]])
+      mitonum=mitonum+1
       }
-
-    
-    }
-  png(paste("cell1/",lifecycle,".ind.","1","-cycles",lifecycle,"size",chromlength,".png",sep=""),width = 800,height = 600)
-    par(mfrow=c(4,1))
-    plot(population[[1]][["chr"]]$me0,type="h",ylim=c(0,1),ylab = "K36me0", main = paste("Cycle: ",lifecycle," Individual: 1",sep = ""),xlab = "Chromatin")
-    plot(population[[1]][["chr"]]$me1,type="h",ylim=c(0,1),ylab = "K36me1",xlab = "Chromatin")
-    plot(population[[1]][["chr"]]$me2,type="h",ylim=c(0,1),ylab = "K36me2",xlab = "Chromatin")
-    plot(population[[1]][["chr"]]$me3,type="h",ylim=c(0,1),ylab = "K36me3",xlab = "Chromatin")
-  dev.off()
+    # if(populationSize>1){
+      temp<-temp+population[[p]][["chr"]]
+      # }
+    # else(temp<-population[[p]][["chr"]])
+  }
   
-     lifecycle=lifecycle+1
-    
-}
+# if (lifecycle==1)
+#   {
+currentpop=list("lifecycle"=c(currentpop[["lifecycle"]],lifecycle),"chr"=temp)
+# } else {
+# currentpop=list("lifecycle"=c(currentpop[["lifecycle"]],lifecycle),"chr"=temp+currentpop[["chr"]])
+# }
+  
+# png(paste("cell1/",lifecycle,".ind.","1","-cycles",lifecycle,"size",chromlength,".png",sep=""),width = 800,height = 600)
+# par(mfrow=c(4,1))
+# plot(population[[1]][["chr"]]$me0,type="h",ylim=c(0,1),ylab = "K36me0", main = paste("Cycle: ",lifecycle," Individual: 1",sep = ""),xlab = "Chromatin")
+# plot(population[[1]][["chr"]]$me1,type="h",ylim=c(0,1),ylab = "K36me1",xlab = "Chromatin")
+# plot(population[[1]][["chr"]]$me2,type="h",ylim=c(0,1),ylab = "K36me2",xlab = "Chromatin")
+# plot(population[[1]][["chr"]]$me3,type="h",ylim=c(0,1),ylab = "K36me3",xlab = "Chromatin")
+# dev.off()
+# 
+par(mfrow=c(4,1))
+#png(paste(lifecycle,".pop.","-cycles",lifecycle,"size",chromlength,".png",sep=""),width = 800,height = 600)
+plot((currentpop[["chr"]]$me0)/(populationSize),type="h",ylab = "K36me0", main = paste("Cycle: ",lifecycle,sep = ""),xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$me1)/(populationSize),type="h",ylab = "K36me1", xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$me2)/(populationSize),type="h",ylab = "K36me2", xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$me3)/(populationSize),type="h",ylab = "K36me3", xlab = "Chromatin",ylim=c(0,1))
 
+#dev.off()
+
+
+lifecycle=lifecycle+1
+currentpop[["chr"]]$N=population[[p]][["chr"]]$N
+}
+print(paste(mitonum," mitosis events happened during this simulation.",sep=""))
