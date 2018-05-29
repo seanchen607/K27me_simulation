@@ -16,7 +16,7 @@ Tp00=0
 Tp11=0
 Tp22=0
 
-mitop=0.2
+mitop=0.1
 depop=0.9
 newdir=paste("~/Desktop/Histone_Mark_Simulation/Steadystate/",gsub(":","_",gsub(" ","-",date())),"-","chrmlngth_",chromlength,"-prc2_",prc2,"-pop_",populationSize,"-add01-12-23_",Tp01,"-",Tp12,"-",Tp23,"-mitop_",mitop,"/",sep = "")
 system(paste("mkdir -p ",newdir,sep = ""))
