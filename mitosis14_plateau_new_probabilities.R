@@ -1,15 +1,17 @@
 rm(list=ls())
+for (Tp23 in c(0.05,0.1,0.2,0.3))
+{
 options(scipen=999)
 chromlength=1000
 prc2=1
-populationSize=10
-life=20
+populationSize=1000
+life=100
 Tp01=0.9
 Tp02=0
 Tp03=0
 Tp12=0.5
 Tp13=0
-Tp23=0.2
+#Tp23=0.05
 Tp00=0
 Tp11=0
 Tp22=0
@@ -171,12 +173,11 @@ me0avg<-c()
 me1avg<-c()
 me2avg<-c()
 me3avg<-c()
-
 while(lifecycle <= life)
 {
+temp<-data.frame(integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength))
+colnames(temp)<-c("N","S","me0","me1","me2","me3")
 
-  temp<-data.frame(integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength))
-  colnames(temp)<-c("N","S","me0","me1","me2","me3")
   for (s in 1:chromlength)
   {
     temp$N[s]=s
@@ -191,7 +192,6 @@ while(lifecycle <= life)
   print(lifecycle)
   for (p in 1:populationSize)
   {
-#  print (paste("individual: ",p,sep=""))
   if (lifecycle==1){population[[p]]<-createNakedChromatin(chromlength)}  
   for (round in 1:prc2)
     {
@@ -199,25 +199,18 @@ while(lifecycle <= life)
       {
       population[[p]]<-deposit(population[[p]][["chr"]],chromlength)
       }
-    }
+
     if (runif(n=1,min=0,max=1) >= 1-mitop)
       {
       population[[p]][["chr"]]<-mitosis(population[[p]][["chr"]])
       mitonum=mitonum+1
       }
-    # if(populationSize>1){
+    }
       temp<-temp+population[[p]][["chr"]]
-      # }
-    # else(temp<-population[[p]][["chr"]])
   }
-  
-# if (lifecycle==1)
-#   {
+
 currentpop=list("lifecycle"=c(currentpop[["lifecycle"]],lifecycle),"chr"=temp)
-# } else {
-# currentpop=list("lifecycle"=c(currentpop[["lifecycle"]],lifecycle),"chr"=temp+currentpop[["chr"]])
-# }
-  
+
  png(paste("cell1/",lifecycle,".ind.","1","-cycles",lifecycle,"size",chromlength,".png",sep=""),width = 800,height = 600)
  par(mfrow=c(4,1))
  plot(population[[1]][["chr"]]$me0,type="h",ylim=c(0,1),ylab = "K36me0", main = paste("Cycle: ",lifecycle," Individual: 1",sep = ""),xlab = "Chromatin")
@@ -247,30 +240,32 @@ var1=var(me1avg[lifecycle:(lifecycle-10)])
 var2=var(me2avg[lifecycle:(lifecycle-10)])
 var3=var(me3avg[lifecycle:(lifecycle-10)])
 
-if (var0 < 0.0001 && var1 < 0.0001 && var2 < 0.0001 && var3 < 0.0001 )
+if (var0 < 0.01 && var1 < 0.01 && var2 < 0.01 && var3 < 0.01 )
 {
   lastlap=lifecycle
-  lifecycle=life
+#  lifecycle=life
+  break
 }
 }
-lastlap=lifecycle
 
 lifecycle=lifecycle+1
+
 currentpop[["chr"]]$N=population[[p]][["chr"]]$N
 }
 print(paste(mitonum," mitosis events happened during this simulation.",sep=""))
 png(paste("4plots-",populationSize,"_pop.","-cycles_",lastlap,"-chromsize_",chromlength,".png",sep=""),width = 800,height = 600)
 par(mfrow=c(2,2))
 plot(me0avg,type = "l",ylim=c(0,1),xlim = c(1,lastlap), main="Average H3K36me0",xlab = "Cycle")
-text(x = (lastlap/10)+5,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
-text(x = round((lastlap/10)+5),y = 0.85,labels = paste("Average mark: ",me0avg[lastlap],sep = ""),pos = 1,offset = 0)
+text(x = (lastlap/10)+6,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
+text(x = round((lastlap/10)+6),y = 0.85,labels = paste("Average mark: ",me0avg[lastlap],sep = ""),pos = 1,offset = 0)
 plot(me1avg,type = "l",ylim=c(0,1),xlim = c(1,lastlap), main="Average H3K36me1",xlab = "Cycle")
-text(x = (lastlap/10)+5,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
-text(x = round((lastlap/10)+5),y = 0.85,labels = paste("Average mark: ",me1avg[lastlap],sep = ""),pos = 1,offset = 0)
+text(x = (lastlap/10)+6,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
+text(x = round((lastlap/10)+6),y = 0.85,labels = paste("Average mark: ",me1avg[lastlap],sep = ""),pos = 1,offset = 0)
 plot(me2avg,type = "l",ylim=c(0,1),xlim = c(1,lastlap), main="Average H3K36me2",xlab = "Cycle")
-text(x = (lastlap/10)+5,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
-text(x = round((lastlap/10)+5),y = 0.85,labels = paste("Average mark: ",me2avg[lastlap],sep = ""),pos = 1,offset = 0)
+text(x = (lastlap/10)+6,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
+text(x = round((lastlap/10)+6),y = 0.85,labels = paste("Average mark: ",me2avg[lastlap],sep = ""),pos = 1,offset = 0)
 plot(me3avg,type = "l",ylim=c(0,1),xlim = c(1,lastlap), main="Average H3K36me3",xlab = "Cycle")
-text(x = (lastlap/10)+5,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
-text(x = round((lastlap/10)+5),y = 0.85,labels = paste("Average mark: ",me3avg[lastlap],sep = ""),pos = 1,offset = 0)
+text(x = (lastlap/10)+6,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
+text(x = round((lastlap/10)+6),y = 0.85,labels = paste("Average mark: ",me3avg[lastlap],sep = ""),pos = 1,offset = 0)
 dev.off()
+}
