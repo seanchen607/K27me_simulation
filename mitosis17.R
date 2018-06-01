@@ -1,24 +1,31 @@
 rm(list=ls())
-#for (Tp23 in c(0.05))
-#{
+# for (Tp01 in c(0.97))
+# {
+#   for(Tp12 in c(0.8))
+#     {
+#     for(Tp23 in c(0.2))
+#       {
+#       for (Tp02 in c(0.1))
+#       {
 options(scipen=999)
 chromlength=1000
 prc2=1
-populationSize=1000
+populationSize=100
 life=100
-Tp01=0.9
-Tp02=0
+Tp01=0.95
+Tp13=Tp02
 Tp03=0
-Tp12=0.5
-Tp13=0
-Tp23=0.05
+Tp12=0.8
+Tp13=0.05
+Tp02=0.05
+Tp23=0.2
 Tp00=0
 Tp11=0
 Tp22=0
-mitosis_prob=0.001
-depop=0.9
+mitosis_prob=0.0001
+depop=1
 
-newdir=paste("~/Desktop/Histone_Mark_Simulation/Steadystate/",gsub(":","_",gsub(" ","-",date())),"-","chrmlngth_",chromlength,"-prc2_",prc2,"-pop_",populationSize,"-add01-12-23_",Tp01,"-",Tp12,"-",Tp23,"-mitosis_prob_",mitosis_prob,"/",sep = "")
+newdir=paste("~/Desktop/Histone_Mark_Simulation/Steadystate/",gsub(":","_",gsub(" ","-",date())),"-","chrmlngth_",chromlength,"-prc2_",prc2,"-pop_",populationSize,"-add01-12-23_0213-",Tp01,"-",Tp12,"-",Tp23,"-",Tp02,"-mitosis_prob_",mitosis_prob,"/",sep = "")
 system(paste("mkdir -p ",newdir,sep = ""))
 system(paste("mkdir -p ",newdir,"cell1/",sep = ""))
 setwd(newdir)
@@ -90,12 +97,12 @@ prc2hl <- function(nucleosomeNumber)
 }
 
 ### Testin prc2hl
-d<-c()
-for (z in 1:1000)
-{
-d<-c(d,prc2hl(z))
-}
-#plot(d)
+ # d<-c()
+ # for (z in 1:1000)
+ # {
+ # d<-c(d,prc2hl(z))
+ # }
+ # plot(d)
 
 
 
@@ -246,9 +253,8 @@ colnames(temp)<-c("N","S","me0","me1","me2","me3")
       }
     }
   temp<-temp+population[[p]][["chr"]]
-#  totalmitosis=totalmitosis+population[["numberofmitosis"]]
-  
   }
+  
 if (lifecycle > 1){
 currentpop=list("lifecycle"=c(currentpop[["lifecycle"]],lifecycle),"chr"=temp)
 } else {
@@ -278,13 +284,13 @@ me1avg=c(me1avg,mean((currentpop[["chr"]]$me1)/populationSize))
 me2avg=c(me2avg,mean((currentpop[["chr"]]$me2)/populationSize))
 me3avg=c(me3avg,mean((currentpop[["chr"]]$me3)/populationSize))
 
-if (lifecycle > 5){
-var0=var(me0avg[lifecycle:(lifecycle-5)])
-var1=var(me1avg[lifecycle:(lifecycle-5)])
-var2=var(me2avg[lifecycle:(lifecycle-5)])
-var3=var(me3avg[lifecycle:(lifecycle-5)])
+if (lifecycle > 10){
+var0=var(me0avg[lifecycle:(lifecycle-10)])
+var1=var(me1avg[lifecycle:(lifecycle-10)])
+var2=var(me2avg[lifecycle:(lifecycle-10)])
+var3=var(me3avg[lifecycle:(lifecycle-10)])
 
-if (var0 < 0.0001 && var1 < 0.0001 && var2 < 0.0001 && var3 < 0.0001 )
+if (var0 < 0.001 && var1 < 0.001 && var2 < 0.001 && var3 < 0.001 )
 {
   lastlap=lifecycle
 #  lifecycle=life
@@ -315,4 +321,7 @@ plot(me3avg,type = "l",ylim=c(0,1),xlim = c(1,lastlap), main="Average H3K36me3",
 text(x = (lastlap/10)+6,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
 text(x = round((lastlap/10)+6),y = 0.85,labels = paste("Average mark: ",me3avg[lastlap],sep = ""),pos = 1,offset = 0)
 dev.off()
-#}
+#       }
+#     }
+#   }
+# }
