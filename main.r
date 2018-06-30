@@ -1,4 +1,74 @@
+rm(list=ls())
+## Please do not change this, this is to avoid the scietific connotation in the results
 options(scipen=999)
+
+## Length of the chromatin (i.e. number of uncleosomes)
+chromlength=1000
+
+## Population size (number of chromatins)
+populationSize=100
+
+### Number of cycles (maximum) before the simulation stops. This will reach only if we don't get to a steady state before
+life=100
+
+## Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
+Tp01=0.95
+Tp03=0
+Tp12=0.8
+Tp13=0.05
+Tp02=0.05
+Tp23=0.2
+Tp00=0
+Tp11=0
+Tp22=0
+
+### The probability of mitosis happening at any move of PRC2
+mitosis_prob=0.0001
+
+## Probability of PRC2 does its function (depositin); 0-1, 1 means everytime if he sits on a nucleosome and if everything else (like other marks etc) look suitable, it does its job. Zero means it won't even if everything else looks okay.
+depop=1
+
+### Distribution of the genes, and other mark domains. It can be a list of several domains. Be careful with overlaps and going over the chromosome length
+genic_structure=list(c(100:300),c(800:1000))
+expression_structure=list(c(100:300))
+k36me2_structure=list(c(400:600))
+k36me3_structure=list(c(100:300))
+
+### How hard K36me2 affects the deposition of K27me3 (zero= completely prevents it, 1= not affecting at all)
+howhardk36me2=0.2
+
+### How hard K36me3 affects the deposition of K27me2 and K27me3 (zero= completely prevents it, 1= not affecting at all)
+howhardk36me3=0
+
+#### Peakiness of K36me2 and K36me3 [0,0.1] (0 is a uniform block, 0.1 is a very sharp peak)
+peakiness=0.001
+
+#### Slope of PRC2 falling off [0,0.1] (0 is a non-falling off, 0.1 is a very sharp slope)
+prc2slop=0.002
+
+### This factor indictes how big the previous nucleosome's status affects the deposition of K27me3. i.e. 2 means it makes it twice as likely etc.
+neighborK27me3bonus=10
+
+### Set this to zero if you want to avoid random walk movement for PRC2
+randomwk=0
+## The maximum number of steps for PRC2 in case of random walk before it falls off the chromatin
+maximumsteps=1000
+## The maximum size of each step in random walk 
+stepsize=30
+
+
+
+
+
+## Home directory on your computer, please make sure you have permission to write
+homedir="~/Desktop/Desktop_June_2018/Histone_Mark_Simulation/Steadystate/"
+
+newdir=paste(homedir,gsub(":","_",gsub(" ","-",date())),"-","chrmlngth_",chromlength,"-pop_",populationSize,"-add01-12-23_0213-",Tp01,"-",Tp12,"-",Tp23,"-",Tp02,"-mitosis_prob_",mitosis_prob,"_Randomwalk_",randomwk,"_neighbor_",neighborK27me3bonus,"x","/",sep = "")
+system(paste("mkdir -p ",newdir,sep = ""))
+system(paste("mkdir -p ",newdir,"cell1/",sep = ""))
+setwd(newdir)
+
+#### Defining normal distribution with min and max and mean and sd
 mysamp <- function(n, m, s, lwr, upr, nnorm) {
   samp <- rnorm(nnorm, m, s)
   samp <- samp[samp >= lwr & samp <= upr]
@@ -8,193 +78,472 @@ mysamp <- function(n, m, s, lwr, upr, nnorm) {
   stop(simpleError("Not enough values to sample from. Try increasing nnorm."))
 }
 
-nnuc=500
-### prc2 initiation
-prc2=0
-prc2hl=10
-burden12=0.0
-burden23=0.5
-# population initiation
-finalz<-data.frame(integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc))
-colnames(finalz)<-c("N","me0","me1","me2","me3")
-for (n in 1:nnuc)
+#### Defining Chromatin 0 (with chromSize nuecleosomes all me0)
+createNakedChromatin <- function(chromSize)
 {
-finalz$N[n]=n
-finalz$me0[n]=0
-finalz$me1[n]=0
-finalz$me2[n]=0
-finalz$me3[n]=0
+  chromatin<-data.frame(integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize))
+  colnames(chromatin)<-c("N","S","me0","me1","me2","me3","K36me2","K36me3","genic","expression")
+  for (s in 1:chromSize)
+  {
+    chromatin$N[s]=s
+    chromatin$S[s]=0
+    chromatin$me0[s]=1
+    chromatin$me1[s]=0
+    chromatin$me2[s]=0
+    chromatin$me3[s]=0
+    chromatin$K36me2[s]=0
+    chromatin$K36me3[s]=0
+    chromatin$genic[s]=0
+    chromatin$expression[s]=0
+  }
+  results<-list("add1"=0,"add2"=0,"add3"=0,"add0"=0,"rando"=0,"chr"=chromatin)
+  return(results)
 }
+chromatin<-createNakedChromatin(chromlength)
 
-
-
- for (cell in 1:50)  {
-   set.seed(cell)
-   ### Creating Naked Chromatin
-   chromatin<-data.frame(integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc),integer(nnuc))
-   colnames(chromatin)<-c("N","S","me0","me1","me2","me3")
-
-
-  for (n in 1:nnuc)
+## Add genic structure
+depositgene<-function(chrom,genic_structure)
+{
+  for (k in genic_structure)
+  {
+    start=k[1]
+    end=k[length(genic_structure[k])]
+    for (q in start:end)
     {
-    chromatin$N[n]=n
-    chromatin$S[n]=0
-    chromatin$me0[n]=1
-    chromatin$me1[n]=0
-    chromatin$me2[n]=0
-    chromatin$me3[n]=0
+      chrom$genic[q]=1
     }
- if (cell ==1)
+  }
+  return(chrom)
+}
+
+
+## add uniform expression
+depositexpression<-function(chrom,expression_structure)
+{
+  for (k in expression_structure)
+  {
+    start=k[1]
+    end=k[length(expression_structure[k])]
+    for (q in start:end)
+    {
+      chrom$expression[q]=1
+    }
+  }
+  return(chrom)
+}
+
+
+#### Defining regions of K36me2 and K36me3
+### Define the type of peak
+shapeOfK36mark<-function(start,end)
+{
+  d1<-c()
+  k36memarklength=(end-start)/2
+  for (i in 1:k36memarklength)
+  {
+    d1<-c(d1,(1-peakiness)^(i))
+  }
+  d2<-rev(d1)
+  d<-c(d2,d1)
+  return(d)
+}
+### deposit the k36me2 mark based on the peak model
+depositk36me2<-function(chrom,k36me2_structure)
+{
+  for (k in k36me2_structure)
+  {
+    start=k[1]
+    end=k[length(k36me2_structure[k])]
+    # print(start)
+    # print(end)
+    i=1
+    for (q in start:end)
+    {
+      #chrom$K36me2[q]=shapeOfK36mark(start,end)[i]
+      if (!is.na(shapeOfK36mark(start,end)[i]) && shapeOfK36mark(start,end)[i] > runif(n=1,min=0,max=1))
+      {
+        chrom$K36me2[q]=1
+      } else { chrom$K36me2[q]=0 }
+      i=i+1
+    }
+  }
+  chrom$K36me2[is.na(chrom$K36me2)] <- 0
+  return(chrom)
+}
+
+
+### deposit the k36me3 mark based on the peak model
+depositk36me3<-function(chrom,k36me_structure)
+{
+  for (k in k36me3_structure)
+  {
+    start=k[1]
+    end=k[length(k36me3_structure[k])]
+    # print(start)
+    # print(end)
+    i=1
+    for (q in start:end)
+    {
+      #chrom$K36me3[q]=shapeOfK36mark(start,end)[i]
+      if (!is.na(shapeOfK36mark(start,end)[i]) && shapeOfK36mark(start,end)[i] > runif(n=1,min=0,max=1))
+      {
+        chrom$K36me3[q]=1
+      } else { chrom$K36me3[q]=0 }
+      i=i+1
+    }
+  }
+  chrom$K36me3[is.na(chrom$K36me3)] <- 0
+  return(chrom)
+}
+
+
+
+
+
+#### Defining mitosis function
+mitosis <- function (chrom){
+  mitochromatin<-chrom
+  for (i in 1:nrow(chrom)) 
+  {
+    check=runif(n=1,min = 0,max=1)
+    if (check > 0.5)
+    {
+      mitochromatin$S[i]=0
+      mitochromatin$me0[i]=1
+      mitochromatin$me1[i]=0
+      mitochromatin$me2[i]=0
+      mitochromatin$me3[i]=0
+    }
+  }
+  return (mitochromatin)
+}
+## Testing mitosis
+# test<-chromatin
+# test[["chr"]]$S=1
+# test[["chr"]]$me1=1
+# test[["chr"]]$me0=0
+# test<-mitosis(test[["chr"]])
+#View(test)
+
+
+#### Defining the probability of PRC2 falling off chromatin based on nucleosomeNumber and length of the chromosome
+prc2hl <- function(nucleosomeNumber)
+{
+  # PRC2 half-life
+#  hl<-(1-0.004)^nucleosomeNumber
+  hl<-(1-prc2slop)^nucleosomeNumber
+  
+  return(hl)  
+}
+
+### Testin prc2hl
+   d<-c()
+   for (z in 1:1000)
    {
-     par(mfrow=c(4,1))
-     plot(chromatin$me0,type = "h", ylim = c(0,1), main = paste("State 0 : K27me0","  -- PRC2 passage: ",prc2,sep=""),ylab="")
-     plot(chromatin$me1,type = "h", ylim = c(0,1), main = paste("State 0 : K27me1","  -- PRC2 passage: ",prc2,sep=""),ylab="")
-     plot(chromatin$me2,type = "h", ylim = c(0,1), main = paste("State 0 : K27me2","  -- PRC2 passage: ",prc2,sep=""),ylab="")
-     plot(chromatin$me3,type = "h", ylim = c(0,1), main = paste("State 0 : K27me3","  -- PRC2 passage: ",prc2,sep=""),ylab="")
-   }
-
-    padd0=c()
-    padd1=c()
-    padd2=c()
-    padd3=c()
+   d<-c(d,prc2hl(z))
+  }
+   plot(d)
 
 
-    ### Runs of PRC2
-    for (prc2 in 1:prc2hl) {
-      ### Depositing marks
-      for (n in 1:nnuc)
-        {
-        padd1[n]=mysamp(n=1, m=0.59, s=0.1, lwr=0, upr=1, nnorm=100)
-        padd2[n]=mysamp(n=1, m=0.01, s=0.1, lwr=0, upr=1, nnorm=100)
-        padd3[n]=mysamp(n=1, m=0.00, s=0.1, lwr=0, upr=1, nnorm=100)
-        padd0[n]=1-(sum(padd1[n],padd2[n],padd3[n]))
-  
-  
-        # PRC2 halflife
-        if (0.3-(n/nnuc) < 0 ){lower=0} else {lower=0.3-(n/nnuc)}
-        if (1.3-(n/nnuc) > 1){upper=1} else {upper=1.3-(n/nnuc)}
-        if (0.8-(n/nnuc) < 0){meaner=0} else {meaner=0.8-(n/nnuc)}
-  
-        chromatin$pE[n]=mysamp(n=1, m=meaner, s=0.05, lwr=lower, upr=upper, nnorm=100)
 
-        chromatin$pDep0[n]=padd0[n]
-        chromatin$pDep1[n]=padd1[n]*chromatin$pE[n]
-        chromatin$pDep2[n]=padd2[n]*chromatin$pE[n]
-        chromatin$pDep3[n]=padd3[n]*chromatin$pE[n]
-        chromatin$pmax[n]=max(c(chromatin$pDep0[n],chromatin$pDep1[n],chromatin$pDep2[n],chromatin$pDep3[n]))
-   #     print (paste ("Cell: ",cell," --- PRC2 passage: ",prc2))
 
-        if (chromatin$S[n] == 0)
-          {
-          if(chromatin$pDep0[n] == chromatin$pmax[n])
-            {
-            chromatin$me0[n]=1
-            chromatin$me1[n]=0
-            chromatin$me2[n]=0
-            chromatin$me3[n]=0
-            } else if(chromatin$pDep1[n] == chromatin$pmax[n]) {
-            chromatin$S[n]=1
-            chromatin$me0[n]=0
-            chromatin$me1[n]=1
-            chromatin$me2[n]=0
-            chromatin$me3[n]=0
-            } else  if(chromatin$pDep2[n] == chromatin$pmax[n]) {
-            chromatin$S[n]=2
-            chromatin$me0[n]=0
-            chromatin$me1[n]=0
-            chromatin$me2[n]=1
-            chromatin$me3[n]=0
-            } else  if(chromatin$pDep3[n] == chromatin$pmax[n]) {
-            chromatin$S[n]=3
-            chromatin$me0[n]=0
-            chromatin$me1[n]=0
-            chromatin$me2[n]=0
-            chromatin$me3[n]=1
-             }
-          } else if (chromatin$S[n] == 1)  {
-            if(chromatin$pDep0[n] == chromatin$pmax[n])
-            {
-            chromatin$S[n]=1
-            chromatin$me0[n]=0
-            chromatin$me1[n]=1
-            chromatin$me2[n]=0
-            chromatin$me3[n]=0
-            } else if(chromatin$pDep1[n] == chromatin$pmax[n] & rnorm(1,mean=0.5,sd=0.1) > burden12) {
-            chromatin$S[n]=2
-            chromatin$me0[n]=0
-            chromatin$me1[n]=0
-            chromatin$me2[n]=1
-            chromatin$me3[n]=0
-            } else  if(chromatin$pDep2[n] == chromatin$pmax[n]) {
-            chromatin$S[n]=3
-            chromatin$me0[n]=0
-            chromatin$me1[n]=0
-            chromatin$me2[n]=0
-            chromatin$me3[n]=1
-            } 
-        } else if (chromatin$S[n] == 2)  {
-        if(chromatin$pDep0[n] == chromatin$pmax[n])
-          {
-            chromatin$S[n]=2
-            chromatin$me0[n]=0
-            chromatin$me1[n]=0
-            chromatin$me2[n]=1
-            chromatin$me3[n]=0
-            } else if(chromatin$pDep1[n] == chromatin$pmax[n]  & rnorm(1,mean=0.5,sd=0.1) > burden23)  {
-            chromatin$S[n]=3
-            chromatin$me0[n]=0
-            chromatin$me1[n]=0
-            chromatin$me2[n]=0
-            chromatin$me3[n]=1
-            }
-          }
-        }
-  
-  
-  
-#prc2=(prc2)+1
-print (prc2)
 
-if (cell ==1){
- par(mfrow=c(4,1))
- plot(chromatin$me0,type = "h", ylim = c(0,1), main = paste("Cell 1: K27me0","  -- PRC2 passage: ",prc2,sep=""),ylab="")
- plot(chromatin$me1,type = "h", ylim = c(0,1), main = paste("Cell 1: K27me1","  -- PRC2 passage: ",prc2,sep=""),ylab="")
- plot(chromatin$me2,type = "h", ylim = c(0,1), main = paste("Cell 1: K27me2","  -- PRC2 passage: ",prc2,sep=""),ylab="")
- plot(chromatin$me3,type = "h", ylim = c(0,1), main = paste("Cell 1: K27me3","  -- PRC2 passage: ",prc2,sep=""),ylab="")
+### Preparing the naked chromosome for K27m123 deposition by adding K36me2 marks as well as defining genic regions and expression in different regions defined above
+
+chromatin[["chr"]]<-depositgene(chromatin[["chr"]],genic_structure)
+chromatin[["chr"]]<-depositexpression(chromatin[["chr"]],expression_structure)
+chromatin[["chr"]]<-depositk36me2(chromatin[["chr"]],k36me2_structure)
+chromatin[["chr"]]<-depositk36me3(chromatin[["chr"]],k36me3_structure)
+
+
+rwchrom=cumsum()
+sample(c(1,chromlength))
+### Depositing marks
+
+randomwalkme<-function(chromlength,maxstepsize,maxsteps)
+{
+  d<-c()
+  distance=0
+  chromlength=chromlength
+  i=1
+  while(abs(distance) <= chromlength && i < maxsteps){
+    right=round(runif(n=1,min=1,max=maxstepsize),digits = 0)
+    left=round(runif(n=1,min=-1*(maxstepsize),max=-1),digits = 0)
+    distance=distance+sample(x = c(left,right),size = 1,replace = T,prob = c(0.5,0.5))
+#    print (i)
+#    print (distance)
+    d<-c(d,distance)
+    i=i+1
+  }
+  d<-subset(d,d[]>0 & d[] <=chromlength)
+  if(length(d)<1) {d=1}
+  return(d)
 }
-}
+# test<-randomwalkme(1000,10,10000)
+# plot(test,type="l",ylab = paste("Distance; max dist = ",max(test),sep=""),xlab = paste("Number of Steps in the positive range; last step = ",length(test),sep=""))
 
+deposit <- function(chr,chromSize)
+{
+mitosiscount=0
+if(randomwk==0){
+  howtomove=c(1:chromSize)
+}
+else {howtomove=randomwalkme(1000,stepsize,maximumsteps)}
+    for (nucleosomeNumber in howtomove)
+  {
+    rando=runif(n=1,min=0,max=1)
+    falloff=prc2hl(nucleosomeNumber)
+    if (nucleosomeNumber > 1){
+    prevnucK27me3state=chr$me3[(nucleosomeNumber)-1]
+    } else {prevnucK27me3state=1}
+    # print("N#")
+    # print(nucleosomeNumber)
+    # print("State")
+    # print (prevnucK27me3state)
+    neighborK27me3bonus=1
     
-finalz$me0<-finalz$me0+chromatin$me0
-finalz$me1<-finalz$me1+chromatin$me1
-finalz$me2<-finalz$me2+chromatin$me2
-finalz$me3<-finalz$me3+chromatin$me3
-print ("iteration")
-print (cell)
-#print ("chromatin3")
-#print(chromatin$me3)
+     if (prevnucK27me3state == 1) 
+     {
+       neighborK27me3bonus=neighborK27me3bonus
+     }
+     else {
+       neighborK27me3bonus=1
+       }
+    
+    if (chr$K36me2[nucleosomeNumber]==1)
+    {penaltyk36me2=howhardk36me2}
+    else {penaltyk36me2=1}
+    if (chr$K36me3[nucleosomeNumber]==1)
+    {penaltyk36me3=howhardk36me3}
+    else {penaltyk36me3=1}
+    
+    if (chr$S[nucleosomeNumber] == 0)
+    {
+      if (rando < Tp00*falloff)
+      {
+        chr$S[nucleosomeNumber]=0
+        chr$me0[nucleosomeNumber]=1
+        chr$me1[nucleosomeNumber]=0
+        chr$me2[nucleosomeNumber]=0
+        chr$me3[nucleosomeNumber]=0
+      } else if(rando < Tp01*falloff) {
+        chr$S[nucleosomeNumber]=1
+        chr$me0[nucleosomeNumber]=0
+        chr$me1[nucleosomeNumber]=1
+        chr$me2[nucleosomeNumber]=0
+        chr$me3[nucleosomeNumber]=0
+      } else  if(rando < Tp02*falloff ) {
+        chr$S[nucleosomeNumber]=2
+        chr$me0[nucleosomeNumber]=0
+        chr$me1[nucleosomeNumber]=0
+        chr$me2[nucleosomeNumber]=1
+        chr$me3[nucleosomeNumber]=0
+      } else  if(rando < Tp03*falloff ) {
+        chr$S[nucleosomeNumber]=3
+        chr$me0[nucleosomeNumber]=0
+        chr$me1[nucleosomeNumber]=0
+        chr$me2[nucleosomeNumber]=0
+        chr$me3[nucleosomeNumber]=1
+      }
+    } else if (chr$S[nucleosomeNumber] == 1)  {
+      if(rando < Tp11*falloff)
+      {
+        chr$S[nucleosomeNumber]=1
+        chr$me0[nucleosomeNumber]=0
+        chr$me1[nucleosomeNumber]=1
+        chr$me2[nucleosomeNumber]=0
+        chr$me3[nucleosomeNumber]=0
+      } else if(rando < Tp12*falloff*penaltyk36me3) {
+        chr$S[nucleosomeNumber]=2
+        chr$me0[nucleosomeNumber]=0
+        chr$me1[nucleosomeNumber]=0
+        chr$me2[nucleosomeNumber]=1
+        chr$me3[nucleosomeNumber]=0
+      } else  if(rando < Tp13*falloff*penaltyk36me3) {
+        chr$S[nucleosomeNumber]=3
+        chr$me0[nucleosomeNumber]=0
+        chr$me1[nucleosomeNumber]=0
+        chr$me2[nucleosomeNumber]=0
+        chr$me3[nucleosomeNumber]=1
+      } 
+    } else if (chr$S[nucleosomeNumber] == 2)  {
+      if(rando < Tp22*falloff)
+      {
+        chr$S[nucleosomeNumber]=2
+        chr$me0[nucleosomeNumber]=0
+        chr$me1[nucleosomeNumber]=0
+        chr$me2[nucleosomeNumber]=1
+        chr$me3[nucleosomeNumber]=0
+      } else if(rando < Tp23*falloff*penaltyk36me2*penaltyk36me3*neighborK27me3bonus)  {
+        chr$S[nucleosomeNumber]=3
+        chr$me0[nucleosomeNumber]=0
+        chr$me1[nucleosomeNumber]=0
+        chr$me2[nucleosomeNumber]=0
+        chr$me3[nucleosomeNumber]=1
+      }
+    }
+# mitosis possibility at each nucleosome, there is a chance that mitosis happens which is very slim (0.001) but considering the length of the chromatin, on average is 1
+    mitosisCheck=runif(n=1,min=0,max=1)
+    if (mitosisCheck <= mitosis_prob)
+    {
+    chr<-mitosis(chr)
+    mitosiscount=mitosiscount+1
+#    print(paste("mitosis in individual",p," lifecyle: ",lifecycle,sep=""))
+# 50% chance that the daughter chromatin receives the prc2, if it doesn't the new prc2 will start from first nucleosome again otherwise, the prc2 continues from where it was interrupted.
+      if(runif(n=1,min=0,max=1) > 0.5)
+      {
+      nucleosomeNumber=1
+      }
+    } 
+    # else if (mitosisCheck > mitosis_prob) {
+    #   #if the mitosis doesn't happen, the output of the deposition chromatin would be the same as what it accumulated so far without slashing it in half
+    #   chr2<-chr
+    # }
+  } 
 
 
+  results<-list("Tp01"=Tp01,"Tp12"=Tp12,"Tp23"=Tp12,"rando"=rando,"chr"=chr,"numberofmitosis"=mitosiscount)
+  return(results)
 }
 
 
 
 
-finalz$me0av<-finalz$me0/cell
-finalz$me1av<-finalz$me1/cell
-finalz$me2av<-finalz$me2/cell
-finalz$me3av<-finalz$me3/cell
+# creating the initial population 
+population<-list()
+currentpop<-list()  
+currentpop<-list("lifecycle"=1,"chr"=createNakedChromatin(chromlength)[["chr"]])  
+currentpop[["chr"]]$me0=0
 
+lifecycle=1
+me0avg<-c()
+me1avg<-c()
+me2avg<-c()
+me3avg<-c()
+k36me2avg<-c()
+k36me3avg<-c()
+
+##### Cycles #######
+totalmitosis=0
+while(lifecycle <= life)
+{
+## Creating a place-holder for future plotting of the population at each life-cycle
+temp<-data.frame(integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength),integer(chromlength))
+colnames(temp)<-c("N","S","me0","me1","me2","me3","K36me2","K36me3","genic","expression")
+
+  for (s in 1:chromlength)
+  {
+    temp$N[s]=s
+    temp$S[s]=0
+    temp$me0[s]=0
+    temp$me1[s]=0
+    temp$me2[s]=0
+    temp$me3[s]=0
+    temp$K36me2[s]=0
+    temp$K36me3[s]=0
+    temp$genic[s]=0
+    temp$expression[s]=0
+  }
+
+
+
+  
+  print(lifecycle)
+  for (p in 1:populationSize)
+  {
+  if (lifecycle==1) 
+    {
+    population[[p]]<-createNakedChromatin(chromlength)
+    population[[p]][["chr"]]<-depositk36me2(population[[p]][["chr"]],k36me2_structure)
+    population[[p]][["chr"]]<-depositk36me3(population[[p]][["chr"]],k36me3_structure)
+    population[[p]][["chr"]]<-depositgene(population[[p]][["chr"]],genic_structure)
+    population[[p]][["chr"]]<-depositexpression(population[[p]][["chr"]],expression_structure)
+    } else if (lifecycle > 1) {
+    if (runif(n=1,min=0,max=1) <= depop)
+      {
+      population[[p]]<-deposit(population[[p]][["chr"]],chromlength)
+      totalmitosis=totalmitosis+population[[p]][["numberofmitosis"]]
+      }
+    }
+  temp<-temp+population[[p]][["chr"]]
+  }
+  
+if (lifecycle > 1){
+currentpop=list("lifecycle"=c(currentpop[["lifecycle"]],lifecycle),"chr"=temp)
+} else {
+  currentpop=list("lifecycle"=lifecycle,"chr"=temp)
+}
+  
+ png(paste("cell1/",lifecycle,".ind.","1","-cycles",lifecycle,"size",chromlength,".png",sep=""),width = 800,height = 1000)
+ par(mfrow=c(8,1))
+ plot(population[[1]][["chr"]]$me0,type="h",ylim=c(0,1),ylab = "K27me0", main = paste("Cycle: ",lifecycle," Individual: 1",sep = ""),xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$me1,type="h",ylim=c(0,1),ylab = "K27me1",xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$me2,type="h",ylim=c(0,1),ylab = "K27me2",xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$me3,type="h",ylim=c(0,1),ylab = "K27me3",xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$K36me2,type="h",ylim=c(0,1),ylab = "K36me2",xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$K36me3,type="h",ylim=c(0,1),ylab = "K36me3",xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$expression,type="h",ylim=c(0,1),ylab = "Expression",xlab = "Chromatin")
+ plot(population[[1]][["chr"]]$genic,type="h",ylim=c(0,1),ylab = "Genic/Intergenic",xlab = "Chromatin")
+ 
+ dev.off()
 # 
-par(mfrow=c(3,1))
-#plot(finalz$me0av,type = "h", ylim = c(0,1), main = paste("K27me0","  -- Average over : ",cell," Cells",sep=""),ylab="")
-plot(finalz$me1av,type = "h", ylim = c(0,1), main = paste("K27me1","  -- Average over : ",cell," Cells",sep=""),ylab="")
-plot(finalz$me2av,type = "h", ylim = c(0,1), main = paste("K27me2","  -- Average over : ",cell," Cells",sep=""),ylab="")
-plot(finalz$me3av,type = "h", ylim = c(0,1), main = paste("K27me3","  -- Average over : ",cell," Cells",sep=""),ylab="")
 
-# x<-c() 
-# nnuc=1000
-#  for (n in 1:nnuc){if (0.5-(n/nnuc) < 0 ){lower=0} else {lower=0.5-(n/nnuc)};if (1.5-(n/nnuc) > 1){upper=1} else {upper=1.5-(n/nnuc)};x<-c(x,mysamp(n=1, m=(1-(n/nnuc)), s=0.1, lwr=lower, upr=upper, nnorm=10000))}
-# par(mfrow=c(1,0)) 
-# plot(x)
-#  summary(x)
+png(paste(populationSize,"_pop.","-cycles_",lifecycle,"-chromsize_",chromlength,".png",sep=""),width = 800,height = 1000)
+par(mfrow=c(8,1))
+plot((currentpop[["chr"]]$me0)/(populationSize),type="h",ylab = "K27me0", main = paste("Cycle: ",lifecycle,sep = ""),xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$me1)/(populationSize),type="h",ylab = "K27me1", xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$me2)/(populationSize),type="h",ylab = "K27me2", xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$me3)/(populationSize),type="h",ylab = "K27me3", xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$K36me2)/(populationSize),type="h",ylab = "K36me2", xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$K36me3)/(populationSize),type="h",ylab = "K36me3", xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$expression)/(populationSize),type="h",ylab = "Expression", xlab = "Chromatin",ylim=c(0,1))
+plot((currentpop[["chr"]]$genic)/(populationSize),type="h",ylab = "Genic/Intergenic", xlab = "Chromatin",ylim=c(0,1))
+dev.off()
+
+me0avg=c(me0avg,mean((currentpop[["chr"]]$me0)/populationSize))
+me1avg=c(me1avg,mean((currentpop[["chr"]]$me1)/populationSize))
+me2avg=c(me2avg,mean((currentpop[["chr"]]$me2)/populationSize))
+me3avg=c(me3avg,mean((currentpop[["chr"]]$me3)/populationSize))
+k36me2avg=c(k36me2avg,mean((currentpop[["chr"]]$K36me2)/populationSize))
+k36me3avg=c(k36me3avg,mean((currentpop[["chr"]]$K36me3)/populationSize))
+
+
+if (lifecycle > 10){
+var0=var(me0avg[lifecycle:(lifecycle-10)])
+var1=var(me1avg[lifecycle:(lifecycle-10)])
+var2=var(me2avg[lifecycle:(lifecycle-10)])
+var3=var(me3avg[lifecycle:(lifecycle-10)])
+
+if (var0 < 0.001 && var1 < 0.001 && var2 < 0.001 && var3 < 0.001 )
+{
+  lastlap=lifecycle
+#  lifecycle=life
+  break
+}
+}
+
+lifecycle=lifecycle+1
+
+currentpop[["chr"]]$N=population[[p]][["chr"]]$N
+
+}
+
+mitonum=totalmitosis
+print(paste(mitonum," mitosis events happened during this simulation.",sep=""))
+png(paste("4plots-",populationSize,"_pop.","-cycles_",lastlap,"-chromsize_",chromlength,".png",sep=""),width = 800,height = 600)
+par(mfrow=c(2,2))
+plot(me0avg,type = "l",ylim=c(0,1),xlim = c(1,lastlap), main="Average H3K27me0",xlab = "Cycle")
+text(x = (lastlap/10)+6,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
+text(x = round((lastlap/10)+6),y = 0.85,labels = paste("Average mark: ",me0avg[lastlap],sep = ""),pos = 1,offset = 0)
+plot(me1avg,type = "l",ylim=c(0,1),xlim = c(1,lastlap), main="Average H3K27me1",xlab = "Cycle")
+text(x = (lastlap/10)+6,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
+text(x = round((lastlap/10)+6),y = 0.85,labels = paste("Average mark: ",me1avg[lastlap],sep = ""),pos = 1,offset = 0)
+plot(me2avg,type = "l",ylim=c(0,1),xlim = c(1,lastlap), main="Average H3K27me2",xlab = "Cycle")
+text(x = (lastlap/10)+6,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
+text(x = round((lastlap/10)+6),y = 0.85,labels = paste("Average mark: ",me2avg[lastlap],sep = ""),pos = 1,offset = 0)
+plot(me3avg,type = "l",ylim=c(0,1),xlim = c(1,lastlap), main="Average H3K27me3",xlab = "Cycle")
+text(x = (lastlap/10)+6,y = 1,labels = paste("Stopped at cycle: ",lastlap," - #Mitosis: ",mitonum,sep = ""),pos = 1,offset = 0)
+text(x = round((lastlap/10)+6),y = 0.85,labels = paste("Average mark: ",me3avg[lastlap],sep = ""),pos = 1,offset = 0)
+
+dev.off()
+
