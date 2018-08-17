@@ -323,10 +323,10 @@ else {howPRC2moves=randomwalkme(1000,stepsize,maximumsteps)}
       if (chr$K27M[nucleosomeNumber]==1)
       {
         mitosisCheck=how_long_K27M_stalls
-        stall=1
+        k27m=1
       } else {
         mitosisCheck=runif(n=1,min=0,max=1)
-        stall=0
+        k27m=0
         }
       
       
@@ -361,7 +361,7 @@ else {howPRC2moves=randomwalkme(1000,stepsize,maximumsteps)}
     if (chr$S[nucleosomeNumber] == 0)
     {
       #If the random generate number falls between zero and Tp00 (times the chance of falling off) nothing changes
-      if (rando < Tp00*falloff && stall==0)
+      if (rando < Tp00*falloff && k27m==0)
       {
         chr$S[nucleosomeNumber]=0
         chr$me0[nucleosomeNumber]=1
@@ -370,7 +370,7 @@ else {howPRC2moves=randomwalkme(1000,stepsize,maximumsteps)}
         chr$me3[nucleosomeNumber]=0
       } 
       # If it falls between zero and Tp01(*fall off chance), changes the S from 0 to 1
-      else if(rando < Tp01*falloff && stall==0) {
+      else if(rando < Tp01*falloff && k27m==0) {
         chr$S[nucleosomeNumber]=1
         chr$me0[nucleosomeNumber]=0
         chr$me1[nucleosomeNumber]=1
@@ -379,7 +379,7 @@ else {howPRC2moves=randomwalkme(1000,stepsize,maximumsteps)}
       } 
       # If it falls between zero and Tp02(*fall off chance), changes the S from 0 to 2
     
-      else  if(rando < Tp02*falloff  && stall==0) {
+      else  if(rando < Tp02*falloff  && k27m==0) {
         chr$S[nucleosomeNumber]=2
         chr$me0[nucleosomeNumber]=0
         chr$me1[nucleosomeNumber]=0
@@ -387,7 +387,7 @@ else {howPRC2moves=randomwalkme(1000,stepsize,maximumsteps)}
         chr$me3[nucleosomeNumber]=0
       } 
       # If it falls between zero and Tp03(*fall off chance), changes the S from 0 to 3
-      else  if(rando < Tp03*falloff  && stall==0) {
+      else  if(rando < Tp03*falloff  && k27m==0) {
         chr$S[nucleosomeNumber]=3
         chr$me0[nucleosomeNumber]=0
         chr$me1[nucleosomeNumber]=0
@@ -397,20 +397,20 @@ else {howPRC2moves=randomwalkme(1000,stepsize,maximumsteps)}
     }
     ## Same story as above if the current state is 1
     else if (chr$S[nucleosomeNumber] == 1)  {
-      if(rando < Tp11*falloff && stall==0)
+      if(rando < Tp11*falloff && k27m==0)
       {
         chr$S[nucleosomeNumber]=1
         chr$me0[nucleosomeNumber]=0
         chr$me1[nucleosomeNumber]=1
         chr$me2[nucleosomeNumber]=0
         chr$me3[nucleosomeNumber]=0
-      } else if(rando < Tp12*falloff*penaltyk36me3 && stall==0) {
+      } else if(rando < Tp12*falloff*penaltyk36me3 && k27m==0) {
         chr$S[nucleosomeNumber]=2
         chr$me0[nucleosomeNumber]=0
         chr$me1[nucleosomeNumber]=0
         chr$me2[nucleosomeNumber]=1
         chr$me3[nucleosomeNumber]=0
-      } else  if(rando < Tp13*falloff*penaltyk36me3 && stall==0) {
+      } else  if(rando < Tp13*falloff*penaltyk36me3 && k27m==0) {
         chr$S[nucleosomeNumber]=3
         chr$me0[nucleosomeNumber]=0
         chr$me1[nucleosomeNumber]=0
@@ -420,14 +420,14 @@ else {howPRC2moves=randomwalkme(1000,stepsize,maximumsteps)}
     } 
     ## Same story as above if the current state is 2, except here we have the bonus for the previous nucleosome having K27me3 mark
     else if (chr$S[nucleosomeNumber] == 2)  {
-      if(rando < Tp22*falloff && stall==0)
+      if(rando < Tp22*falloff && k27m==0)
       {
         chr$S[nucleosomeNumber]=2
         chr$me0[nucleosomeNumber]=0
         chr$me1[nucleosomeNumber]=0
         chr$me2[nucleosomeNumber]=1
         chr$me3[nucleosomeNumber]=0
-      } else if(rando < Tp23*falloff*penaltyk36me2*penaltyk36me3*neighborK27me3bonus && stall==0)  {
+      } else if(rando < Tp23*falloff*penaltyk36me2*penaltyk36me3*neighborK27me3bonus && k27m==0)  {
         chr$S[nucleosomeNumber]=3
         chr$me0[nucleosomeNumber]=0
         chr$me1[nucleosomeNumber]=0
