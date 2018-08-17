@@ -40,7 +40,7 @@ expression_structure=list(c(400:600))
 k36me2_structure=list(c(650:750))
 k36me3_structure=list(c(400:600))
 K27Mprobability=0.05
-
+how_long_K27M_stalls=0.99
 ### How hard K36me2 affects the deposition of K27me3 (zero= completely prevents it, 1= not affecting at all)
 howhardk36me2=0.1
 
@@ -322,7 +322,7 @@ else {howPRC2moves=randomwalkme(1000,stepsize,maximumsteps)}
       
       if (chr$K27M[nucleosomeNumber]==1)
       {
-        mitosisCheck=0.1
+        mitosisCheck=how_long_K27M_stalls
       } else { mitosisCheck=runif(n=1,min=0,max=1) }
       
       
