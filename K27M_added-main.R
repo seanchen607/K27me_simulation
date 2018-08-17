@@ -40,6 +40,7 @@ expression_structure=list(c(400:600))
 k36me2_structure=list(c(650:750))
 k36me3_structure=list(c(400:600))
 K27Mprobability=0.05
+## The value below shows how long K27M in scale of mitosis clock will stall the PRC2. In other words, if the probability of mitosis is 1/1000 and the value below is 1/10, that means K27M will stall PRC2 100 times more than its regular speed which is 1000 rounds per mitosis.
 how_long_K27M_stalls=0.1
 ### How hard K36me2 affects the deposition of K27me3 (zero= completely prevents it, 1= not affecting at all)
 howhardk36me2=0.1
@@ -255,8 +256,8 @@ mitosis <- function (chrom){
 
 
 ### Add K27M ###
-### Note, that the first K27M (since it's on H3.3 and H3.3 usually doesn't exist in K27me3 domains), should be far down from the PRC2 nucleation site). I use the arbitrary distance of 100 nucleosomes 
-nucleation_distance=100
+### Note, that the first K27M (since it's on H3.3 and H3.3 usually doesn't exist in K27me3 domains), should be far down from the PRC2 nucleation site). I use the arbitrary distance of 50 nucleosomes 
+nucleation_distance=50
 addk27m <- function(chrom,K27Mprobability)
 {
   for (i in nucleation_distance:nrow(chrom)) 
