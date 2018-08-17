@@ -1,5 +1,3 @@
-#This version includes correction for probabilities (now the sum of all probabilities in each state [before counting for penalties etc] adds up to 1.
-#This also includes addition of K27M and including these mutations (in fact H3.3 histones) only in open chromatin.
 rm(list=ls())
 this_version="A5.1-H3.3-Only-in-OpenChr-Prob-K27M"
 
@@ -291,7 +289,7 @@ addk27m <- function(chrom,expression_structure)
       check=runif(n=1,min = 0,max=1)
       if (check < K27Mprobability)
       {
-      chrom$expression[q]=1
+      chrom$K27M[q]=1
       }
     }
   }
@@ -307,7 +305,7 @@ chromatin[["chr"]]<-depositgene(chromatin[["chr"]],genic_structure)
 chromatin[["chr"]]<-depositexpression(chromatin[["chr"]],expression_structure)
 chromatin[["chr"]]<-depositk36me2(chromatin[["chr"]],k36me2_structure)
 chromatin[["chr"]]<-depositk36me3(chromatin[["chr"]],k36me3_structure)
-chromatin[["chr"]]<-addk27m(chromatin[["chr"]],K27Mprobability)
+chromatin[["chr"]]<-addk27m(chromatin[["chr"]],expression_structure)
 
 #sample(c(1,chromlength))
 ### Depositing marks
