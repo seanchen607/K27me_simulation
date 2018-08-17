@@ -42,7 +42,7 @@ depop=1
 ### Distribution of the genes, and other mark domains. It can be a list of several domains. Be careful with overlaps and going over the chromosome length
 genic_structure=list(c(100:300),c(800:1000))
 expression_structure=list(c(100:300))
-openchromatin=list(c(100:300),c(600:700))
+openchromatin=list(c(50:350),c(650:800))
 k36me2_structure=list(c(400:600))
 k36me3_structure=list(c(100:300))
 ## 5% of the genome but mostly found in expressed genes (open chromatin regions)
