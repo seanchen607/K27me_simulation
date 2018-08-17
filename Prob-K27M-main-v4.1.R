@@ -1,3 +1,6 @@
+#This version includes correction for probabilities (now the sum of all probabilities in each state [before counting for penalties etc] adds up to 1.
+ #This also includes addition of K27M and including these mutations.
+
 rm(list=ls())
 this_version="A4.1-Prob-K27M"
 
