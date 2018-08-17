@@ -18,17 +18,18 @@ populationSize=100
 life=100
 
 ## Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
+#Note that adding me to higher methylation states is apparently harder thus the diffrence
 Tp00=0.01
 Tp01=0.99
 Tp02=0.0
 Tp03=0
 
-Tp11=0.01
-Tp12=0.99
+Tp11=0.05
+Tp12=0.95
 Tp13=0.0
 
-Tp22=0.5
-Tp23=0.5
+Tp22=0.1
+Tp23=0.9
 
 
 
