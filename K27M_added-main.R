@@ -35,10 +35,10 @@ mitosis_prob=0.0001
 depop=1
 
 ### Distribution of the genes, and other mark domains. It can be a list of several domains. Be careful with overlaps and going over the chromosome length
-genic_structure=list(c(400:600),c(800:900))
-expression_structure=list(c(400:600))
-k36me2_structure=list(c(650:750))
-k36me3_structure=list(c(400:600))
+genic_structure=list(c(100:300),c(800:1000))
+expression_structure=list(c(100:300))
+k36me2_structure=list(c(400:600))
+k36me3_structure=list(c(100:300))
 K27Mprobability=0.05
 ## The value below shows how long K27M in scale of mitosis clock will stall the PRC2. In other words, if the probability of mitosis is 1/1000 and the value below is 1/10, that means K27M will stall PRC2 100 times more than its regular speed which is 1000 rounds per mitosis.
 how_long_K27M_stalls=0.1
