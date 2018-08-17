@@ -1,3 +1,6 @@
+#This version includes correction for probabilities (now the sum of all probabilities in each state [before counting for penalties etc] adds up to 1.
+ #This also includes addition of K27M and including these mutations (in fact H3.3 histones) only in open chromatin.
+
 rm(list=ls())
 this_version="A5.1-H3.3-Only-in-OpenChr-Prob-K27M"
 
