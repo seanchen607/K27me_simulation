@@ -280,16 +280,22 @@ mitosis <- function (chrom){
 ## below is the changed version based on the presence of H3.3 only in open chromatin i.e. expression_structure
 addk27m <- function(chrom,expression_structure)
 {
-  for (i in expression_structure) 
+  for (k in expression_structure)
   {
-    check=runif(n=1,min = 0,max=1)
-    if (check < K27Mprobability)
+    start=k[1]
+    end=k[length(expression_structure[k])]
+    for (q in start:end)
     {
-      chrom$K27M[i]=1
+      check=runif(n=1,min = 0,max=1)
+      if (check < K27Mprobability)
+      {
+      chrom$expression[q]=1
+      }
     }
   }
-  return (chrom)
+  return(chrom)
 }
+  
 
 
 
