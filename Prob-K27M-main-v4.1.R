@@ -18,15 +18,19 @@ populationSize=100
 life=100
 
 ## Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
+Tp00=0.01
 Tp01=0.99
+Tp02=0.0
 Tp03=0
+
+Tp11=0.01
 Tp12=0.99
 Tp13=0.0
-Tp02=0.0
-Tp23=0.05
-Tp00=0
-Tp11=0
-Tp22=0
+
+Tp22=0.5
+Tp23=0.5
+
+
 
 ### The probability of mitosis happening at any move of PRC2
 mitosis_prob=0.0001
