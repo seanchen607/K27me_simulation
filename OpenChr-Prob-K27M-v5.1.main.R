@@ -42,10 +42,11 @@ depop=1
 ### Distribution of the genes, and other mark domains. It can be a list of several domains. Be careful with overlaps and going over the chromosome length
 genic_structure=list(c(100:300),c(800:1000))
 expression_structure=list(c(100:300))
+openchromatin=list(c(100:300),c(600:700))
 k36me2_structure=list(c(400:600))
 k36me3_structure=list(c(100:300))
 ## 5% of the genome but mostly found in expressed genes (open chromatin regions)
-K27Mprobability=0.05*((chromlength)/(length(expression_structure[[1]])))
+K27Mprobability=0.05*((chromlength)/(sum(lengths(openchromatin))))
 ## The value below shows how long K27M in scale of mitosis clock will stall the PRC2. In other words, if the probability of mitosis is 1/1000 and the value below is 1/10, that means K27M will stall PRC2 100 times more than its regular speed which is 1000 rounds per mitosis.
 how_long_K27M_stalls=0.1
 ### How hard K36me2 affects the deposition of K27me3 (zero= completely prevents it, 1= not affecting at all)
@@ -278,12 +279,12 @@ mitosis <- function (chrom){
 # }
 
 ## below is the changed version based on the presence of H3.3 only in open chromatin i.e. expression_structure
-addk27m <- function(chrom,expression_structure)
+addk27m <- function(chrom,openchromatin)
 {
-  for (k in expression_structure)
+  for (k in openchromatin)
   {
     start=k[1]
-    end=k[length(expression_structure[k])]
+    end=k[length(openchromatin[k])]
     for (q in start:end)
     {
       check=runif(n=1,min = 0,max=1)
@@ -305,7 +306,7 @@ chromatin[["chr"]]<-depositgene(chromatin[["chr"]],genic_structure)
 chromatin[["chr"]]<-depositexpression(chromatin[["chr"]],expression_structure)
 chromatin[["chr"]]<-depositk36me2(chromatin[["chr"]],k36me2_structure)
 chromatin[["chr"]]<-depositk36me3(chromatin[["chr"]],k36me3_structure)
-chromatin[["chr"]]<-addk27m(chromatin[["chr"]],expression_structure)
+chromatin[["chr"]]<-addk27m(chromatin[["chr"]],openchromatin)
 
 #sample(c(1,chromlength))
 ### Depositing marks
