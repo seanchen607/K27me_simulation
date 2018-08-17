@@ -324,6 +324,7 @@ else {howPRC2moves=randomwalkme(1000,stepsize,maximumsteps)}
       if (chr$K27M[nucleosomeNumber]==1)
       {
         mitosisCheck=how_long_K27M_stalls
+        ## The random number below is chosen to be compared to 0.5 on each nucleosome that has a H3.3K27M. If the random number is below 0.5, that means PRC2 still can methylate the other H3.3 from the two in each nucleosome. Basically it writes the methyl mark half of the times on nucleosomes with K27M.
         k27m=runif(n=1,min=0,max=1)
       } else {
         mitosisCheck=runif(n=1,min=0,max=1)
