@@ -643,6 +643,6 @@ dev.off()
 
 
 # To be added:
-# 5% aporadic K27M (done)
-# increasing the chance of mitosis once hitting K27M to 10% thus every K27M stalls the process as long as 10% of a cell cycle. so whenever prc2 hits k27m, subject the chromosome to mitosis (with 10% chance)
-# check the sum of probability at each position, it has to come to 1
+# 5% sporadic K27M (done)
+# increasing the chance of mitosis once hitting K27M to 10% thus every K27M stalls the process as long as 10% of a cell cycle. so whenever prc2 hits k27m, subject the chromosome to mitosis (with 10% chance) (done)
+# check the sum of probability at each position, it has to come to 1 (done)
