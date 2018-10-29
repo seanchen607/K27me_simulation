@@ -666,10 +666,7 @@ plot(average2total, type = "l")
 plot(average3total, type = "l")
 
 
-### ToDo: To ptake a snapshot every 1000 iteration of the timer base don the averages calculated below ### DONE (differently though)
+##### To add a reset for mitosis probability checker and a vector that holds 0 or 1 for if the prc2 is attached for each nucleosome
 ### ToDo: To implement effectors on the probability of depositing marks such as K36me2,3 
 ### ToDo: To implement the effect of neighboring nucleosomes (last step)
-### ToDo: To add the prc2 halflife
-### ToDo: To add the mitosis and finding the right probability ### DONE
-### ToDo: To implement stalling at the time of K27M ### DONE
 
