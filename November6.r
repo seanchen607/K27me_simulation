@@ -527,7 +527,7 @@ while (timer <= life)
   {
     prc2location=1
     prc2_round_counter=prc2_round_counter+1
-    print("#################")
+#    print("#################")
   }
   
   ### Checking out if PRC2 is still attached
@@ -564,7 +564,7 @@ while (timer <= life)
         population[[p]][["chr"]]$prc2_falling_chance[prc2location]=1
       }
 
-      if(prc2location %% 100 ==0 && p==5){print(paste("Round: ",prc2_round_counter," >> P= ",p," > prc2 location: ",prc2location," > prc2_falling_chance: ",population[[p]][["chr"]]$prc2_falling_chance," > prc2 attached: ",population[[p]]$prc2_attached,sep = ""))}
+      if(prc2location %% 100 ==0 && p==5){#print(paste("Round: ",prc2_round_counter," >> P= ",p," > prc2 location: ",prc2location," > prc2_falling_chance: ",population[[p]][["chr"]]$prc2_falling_chance," > prc2 attached: ",population[[p]]$prc2_attached,sep = ""))}
       #      print(paste("P: ",p," >>> prc2 location: ",prc2location," >>> prc2 attached: ",population[[p]]$prc2_attached,sep=""))
       ## A random number between 0 and 1 to be compared to the value calculated based on the prc2location or timer and the prc2slop (i.e. how fast the halflife of prc2 declines)
 ####### Now if PRC2 is attached:
@@ -572,7 +572,7 @@ while (timer <= life)
       {
         population[[p]]<-deposit(population[[p]],prc2location)
         if(prc2location %% 50 ==0)
-        print(paste("threshold: ",prc2_threshold," > chance: ",population[[p]][["chr"]]$prc2_falling_chance[prc2location],sep = ""))
+      #  print(paste("threshold: ",prc2_threshold," > chance: ",population[[p]][["chr"]]$prc2_falling_chance[prc2location],sep = ""))
         population[[p]][["chr"]]$prc2_falling_chance[prc2location] <- runif(1,min = 0,max=1)
         }
       mitosis_chance=runif(n=1,min=0,max=1)
