@@ -24,20 +24,20 @@ life=50000
 
 # Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
 # Note that adding me to higher methylation states is apparently harder thus the diffrence
-Tp00=0.1
-Tp01=0.9
+Tp00=0.01
+Tp01=0.99
 Tp02=0.0
 Tp03=0
 
-Tp11=0.3
-Tp12=0.7
+Tp11=0.1
+Tp12=0.9
 Tp13=0.0
 
-Tp22=0.4
-Tp23=0.6
+Tp22=0.2
+Tp23=0.8
 
 # The probability of mitosis happening at any move of PRC2
-mitosis_prob=0.00001
+mitosis_prob=0.000005
 
 # Probability of PRC2 does its function (depositin); 0-1, 1 means everytime if he sits on a nucleosome and if everything else (like other marks etc) look suitable, it does its job. Zero means it won't even if everything else looks okay.
 #depop=1
@@ -365,14 +365,14 @@ mitosis <- function (chromatin){
   return (mitochromatin)
 }
 ## Testing mitosis
-test<-chromatin
-test[["chr"]]$S=1
-test[["chr"]]$me1=1
-test[["chr"]]$me0=0
-test2<-mitosis(test)
-View(test[["chr"]])
-View(test2[["chr"]])
-
+# test<-chromatin
+# test[["chr"]]$S=1
+# test[["chr"]]$me1=1
+# test[["chr"]]$me0=0
+# test2<-mitosis(test)
+# View(test[["chr"]])
+# View(test2[["chr"]])
+# 
 
 
 
