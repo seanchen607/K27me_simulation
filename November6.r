@@ -17,10 +17,10 @@ options(scipen=999)
 chromlength=1000
 
 # Population size (number of chromatins)
-populationSize=20
+populationSize=50
 
 # Number of cycles (maximum) before the simulation stops. This will reach only if we don't get to a steady state before
-life=10000
+life=50000
 
 # Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
 # Note that adding me to higher methylation states is apparently harder thus the diffrence
@@ -564,19 +564,19 @@ while (timer <= life)
         population[[p]][["chr"]]$prc2_falling_chance[prc2location]=1
       }
 
-      if(prc2location %% 100 ==0 && p==5){
-        print(paste("Round: ",prc2_round_counter," >> P= ",p," > prc2 location: ",prc2location," > prc2_falling_chance: ",population[[p]][["chr"]]$prc2_falling_chance," > prc2 attached: ",population[[p]]$prc2_attached,sep = ""))
-        }
-      #      print(paste("P: ",p," >>> prc2 location: ",prc2location," >>> prc2 attached: ",population[[p]]$prc2_attached,sep=""))
+      # if(prc2location %% 100 ==0 && p==5){
+      #   print(paste("Round: ",prc2_round_counter," >> P= ",p," > prc2 location: ",prc2location," > prc2_falling_chance: ",population[[p]][["chr"]]$prc2_falling_chance," > prc2 attached: ",population[[p]]$prc2_attached,sep = ""))
+      #   }
+      
       ## A random number between 0 and 1 to be compared to the value calculated based on the prc2location or timer and the prc2slop (i.e. how fast the halflife of prc2 declines)
 ####### Now if PRC2 is attached:
       if (population[[p]]$prc2_attached==1)
       {
         population[[p]]<-deposit(population[[p]],prc2location)
-        if(prc2location %% 50 ==0)
-        {
-          print(paste("threshold: ",prc2_threshold," > chance: ",population[[p]][["chr"]]$prc2_falling_chance[prc2location],sep = ""))
-        }
+        # if(prc2location %% 50 ==0)
+        # {
+        #   print(paste("threshold: ",prc2_threshold," > chance: ",population[[p]][["chr"]]$prc2_falling_chance[prc2location],sep = ""))
+        # }
         population[[p]][["chr"]]$prc2_falling_chance[prc2location] <- runif(1,min = 0,max=1)
         }
       mitosis_chance=runif(n=1,min=0,max=1)
