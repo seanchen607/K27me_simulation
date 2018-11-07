@@ -20,7 +20,7 @@ chromlength=1000
 populationSize=20
 
 # Number of cycles (maximum) before the simulation stops. This will reach only if we don't get to a steady state before
-life=50000
+life=10000
 
 # Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
 # Note that adding me to higher methylation states is apparently harder thus the diffrence
@@ -51,7 +51,7 @@ mitosis_prob=0.00001
 
 genic_structure=list(c(980,1000))
 expression_structure=list(c(980:1000))
-openchromatin=list(c(400:460))
+openchromatin=list(c(0:100))
 k36me2_structure=list(c(980,1000))
 k36me3_structure=list(c(980,1000))
 
@@ -365,13 +365,13 @@ mitosis <- function (chromatin){
   return (mitochromatin)
 }
 ## Testing mitosis
-#test<-chromatin
-#test[["chr"]]$S=1
-#test[["chr"]]$me1=1
-#test[["chr"]]$me0=0
-#test2<-mitosis(test)
-#View(test[["chr"]])
-#View(test2[["chr"]])
+test<-chromatin
+test[["chr"]]$S=1
+test[["chr"]]$me1=1
+test[["chr"]]$me0=0
+test2<-mitosis(test)
+View(test[["chr"]])
+View(test2[["chr"]])
 
 
 
@@ -564,7 +564,9 @@ while (timer <= life)
         population[[p]][["chr"]]$prc2_falling_chance[prc2location]=1
       }
 
-      if(prc2location %% 100 ==0 && p==5){#print(paste("Round: ",prc2_round_counter," >> P= ",p," > prc2 location: ",prc2location," > prc2_falling_chance: ",population[[p]][["chr"]]$prc2_falling_chance," > prc2 attached: ",population[[p]]$prc2_attached,sep = ""))}
+      if(prc2location %% 100 ==0 && p==5){
+        print(paste("Round: ",prc2_round_counter," >> P= ",p," > prc2 location: ",prc2location," > prc2_falling_chance: ",population[[p]][["chr"]]$prc2_falling_chance," > prc2 attached: ",population[[p]]$prc2_attached,sep = ""))
+        }
       #      print(paste("P: ",p," >>> prc2 location: ",prc2location," >>> prc2 attached: ",population[[p]]$prc2_attached,sep=""))
       ## A random number between 0 and 1 to be compared to the value calculated based on the prc2location or timer and the prc2slop (i.e. how fast the halflife of prc2 declines)
 ####### Now if PRC2 is attached:
@@ -572,7 +574,9 @@ while (timer <= life)
       {
         population[[p]]<-deposit(population[[p]],prc2location)
         if(prc2location %% 50 ==0)
-      #  print(paste("threshold: ",prc2_threshold," > chance: ",population[[p]][["chr"]]$prc2_falling_chance[prc2location],sep = ""))
+        {
+          print(paste("threshold: ",prc2_threshold," > chance: ",population[[p]][["chr"]]$prc2_falling_chance[prc2location],sep = ""))
+        }
         population[[p]][["chr"]]$prc2_falling_chance[prc2location] <- runif(1,min = 0,max=1)
         }
       mitosis_chance=runif(n=1,min=0,max=1)
