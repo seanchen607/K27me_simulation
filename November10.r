@@ -537,7 +537,7 @@ prc2pathindex=1
 breaking=0
 while (timer)
 {
-
+  
   if(prc2location%%1000==0 || prc2location==1){print (paste("Timer: ",timer," > prc2location: ",prc2location,sep = ""))}
   
   ### Check if the prc2 has reached the end of chromosome and if so, reset it to first nucleosome  
@@ -587,13 +587,13 @@ while (timer)
         print(paste("individual: ",p," > timer: ",timer," > prc2 round: ",prc2_round_counter,sep=""))
       }
       if(prc2location%%snapshot_interval==0 || timer==1)
-        {      
+      {      
         population_Marks_sum$me0<-population_Marks_sum$me0+population[[p]][["chr"]]$me0
         population_Marks_sum$me1<-population_Marks_sum$me1+population[[p]][["chr"]]$me1
         population_Marks_sum$me2<-population_Marks_sum$me2+population[[p]][["chr"]]$me2
         population_Marks_sum$me3<-population_Marks_sum$me3+population[[p]][["chr"]]$me3
         if(p==populationSize)
-          {
+        {
           print (paste("prc2location=",prc2location,"~",chromlength," > p=",p,"~",populationSize))
           average_values0<-c(average_values0,sum(population_Marks_sum$me0)/(populationSize*chromlength))
           average_values1<-c(average_values1,sum(population_Marks_sum$me1)/(populationSize*chromlength))
@@ -606,22 +606,22 @@ while (timer)
           
           # Check if K27me3 has reached plateau (variance of the last 5 average values < 0.001)
           if(length(average_values3) > 5)
-            {
+          {
             var3<-var(average_values3[(length(average_values3)-5):length(average_values3)])
             var2<-var(average_values2[(length(average_values2)-5):length(average_values2)])
             var1<-var(average_values1[(length(average_values1)-5):length(average_values1)])
             var0<-var(average_values0[(length(average_values0)-5):length(average_values0)])
             
             if((var3 < var_threshold && var2 < var_threshold && var1 < var_threshold && var0 < var_threshold) || timer==life)
-              {
+            {
               #print (paste("breaking time:",timer,sep=""))
               breaking=1;
-              }
             }
           }
         }
+      }
     }
-
+    
     
     # Stall starts at zero. At the end of each timer round, stall is checked, if zero, 
     # that means there was no K27M at the position where prc2 is landed at the time=timer and it can move on, 
@@ -648,12 +648,12 @@ while (timer)
     population[[p]][["chr"]]$prc2_falling_chance<-runif(1,min = 0,max=1)
   } else {prc2location=prc2location}
   
-
+  
   if(breaking==1)
-   {
-     print (paste("breaking time:",timer,sep=""))
-     break; 
-   }
+  {
+    print (paste("breaking time:",timer,sep=""))
+    break; 
+  }
   
   #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  
 } ### End of timer's life
@@ -663,22 +663,45 @@ print(paste("Number of mitosis: ",mitosis_count,sep=""))
 print(paste("Prc2 Rounds: ",prc2_round_counter,sep=""))
 
 
- par(mfrow=c(2,2))
- yaxis_marks<-seq(from = 0, to = timer, by = snapshot_interval)
- plot(average_values0,type = "l",xaxt="n",xlab="Timer",ylab="me0",ylim=c(0,1.2))
- axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
- plot(average_values1,type = "l",xaxt="n",xlab="Timer",ylab="me1")
- axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
- plot(average_values2,type = "l",xaxt="n",xlab="Timer",ylab="me2")
- axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
- plot(average_values3,type = "l",xaxt="n",xlab="Timer",ylab="me3")
- axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
+par(mfrow=c(2,2))
+yaxis_marks<-seq(from = 0, to = timer, by = snapshot_interval)
+plot(average_values0,type = "l",xaxt="n",xlab="Timer",ylab="me0",ylim=c(0,1.2))
+axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
+plot(average_values1,type = "l",xaxt="n",xlab="Timer",ylab="me1")
+axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
+plot(average_values2,type = "l",xaxt="n",xlab="Timer",ylab="me2")
+axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
+plot(average_values3,type = "l",xaxt="n",xlab="Timer",ylab="me3")
+axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
 
 
 
+plot_df<-data.frame(me0=integer(chromlength),me1=integer(chromlength),me2=integer(chromlength),me3=integer(chromlength))
+plot_df$me0=0
+plot_df$me1=0
+plot_df$me2=0
+plot_df$me3=0
 
 
 
-### ToDo: To implement effectors on the probability of depositing marks such as K36me2,3 
-### ToDo: To implement the effect of neighboring nucleosomes (last step)
+for (i in 1:populationSize)
+{
+  plot_df$me0<-plot_df$me0+population[[i]][["chr"]]$me0
+  plot_df$me1<-plot_df$me1+population[[i]][["chr"]]$me1
+  plot_df$me2<-plot_df$me2+population[[i]][["chr"]]$me2
+  plot_df$me3<-plot_df$me3+population[[i]][["chr"]]$me3
+  
+}
 
+plot_df<-plot_df/populationSize
+par(mfrow=c(5,1))
+plot(plot_df$me0,ylim=c(0,1),ylab = "me0",type = "h")
+plot(plot_df$me1,ylim=c(0,1),ylab = "me1",type = "h")
+plot(plot_df$me2,ylim=c(0,1),ylab = "me2",type = "h")
+plot(plot_df$me3,ylim=c(0,1),ylab = "me3",type = "h")
+plot(population[[1]][["chr"]]$K27M,ylim=c(0,1),ylab = "K27M",type = "h")
+
+
+
+### ToDo: To put back the effectors on the probability of depositing marks such as K36me2,3 
+### ToDo: To put back the effect of neighboring nucleosomes (last step)
