@@ -72,7 +72,7 @@ k36me3Effect=0
 K36_slope=0.0005
 
 # Slope of PRC2 falling off [0,0.1] (0 is a non-falling off, 0.1 is a very sharp slope)
-prc2_slop=0.00025
+prc2_slop=0.0005
 
 # This factor indicates how big the previous nucleosome's status affects the deposition of K27me3. i.e. 2 means it makes it twice as likely, 10 means times likely etc.
 neighborK27me3bonus=10
