@@ -28,25 +28,26 @@ populationSize=100
 # as well as where the simulation should stop based on the variance changes in the average values between consecutive timer ticks
 population_history<-list()
 
-# Number of cycles (maximum) before the simulation stops. This will reach only if we don't get to a steady state before
-life=8000
+# Maximum number of cycles (maximum) before the simulation stops. This will reach only if we don't get to a steady state before
+life=100000
+var_threshold=0.00001
 
 # Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
 # Note that adding me to higher methylation states is apparently harder thus the diffrence
-Tp00=0.01
-Tp01=0.99
+Tp00=0.05
+Tp01=0.95
 Tp02=0
 Tp03=0
 
-Tp11=0.01
-Tp12=0.99
+Tp11=0.15
+Tp12=0.85
 Tp13=0
 
-Tp22=0.1
-Tp23=0.9
+Tp22=0.45
+Tp23=0.55
 
 # The probability of mitosis happening at any move of PRC2
-mitosis_prob=0.00007
+mitosis_prob=0.00015
 
 # Distribution of the genes, and other mark domains. It can be a list of several domains. Be careful with overlaps and going over the chromosome length
 genic_structure=list(c(980,1000))
@@ -59,7 +60,7 @@ k36me3_structure=list(c(980,1000))
 K27Mprobability=0.05
 
 # The value below shows how long K27M in scale of timer ticks prc2location will stall the PRC2. In other words, if the probability of mitosis is 1/1000 and the value below is 1/10, that means K27M will stall PRC2 100 times more than its regular speed which is 1000 rounds per mitosis.
-stallingforK27M=5
+stallingforK27M=50
 
 # How much K36me2 affects the deposition of K27me3 (zero= completely prevents it, 1= not affecting at all) This value will be multiplied by the probability of the deposition, thus closer to 0 means lowering the probability more.
 k36me2Effect=0.1
@@ -71,7 +72,7 @@ k36me3Effect=0
 K36_slope=0.0005
 
 # Slope of PRC2 falling off [0,0.1] (0 is a non-falling off, 0.1 is a very sharp slope)
-prc2_slop=0.0025
+prc2_slop=0.00025
 
 # This factor indicates how big the previous nucleosome's status affects the deposition of K27me3. i.e. 2 means it makes it twice as likely, 10 means times likely etc.
 neighborK27me3bonus=10
@@ -611,10 +612,10 @@ while (timer)
             var1<-var(average_values1[(length(average_values1)-5):length(average_values1)])
             var0<-var(average_values0[(length(average_values0)-5):length(average_values0)])
             
-            if(var3 < 0.000001 && var2 < 0.000001 && var1 < 0.000001 && var0 < 0.000001)
+            if((var3 < var_threshold && var2 < var_threshold && var1 < var_threshold && var0 < var_threshold) || timer==life)
               {
-              print (paste("breaking time:",timer,sep=""))
-              break;
+              #print (paste("breaking time:",timer,sep=""))
+              breaking=1;
               }
             }
           }
@@ -648,11 +649,11 @@ while (timer)
   } else {prc2location=prc2location}
   
 
-  # if(breaking==1)
-  # {
-  #   print (paste("breaking time:",timer,sep=""))
-  #   break; 
-  # }
+  if(breaking==1)
+   {
+     print (paste("breaking time:",timer,sep=""))
+     break; 
+   }
   
   #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  
 } ### End of timer's life
