@@ -178,7 +178,7 @@ createNakedChromatin <- function(chromSize)
 
 #### 4- Functions for modifying chromatin zero ####
 
-## Adding genic structure
+## 4-1: Adding genic structure
 depositgene<-function(chrom,genic_structure)
 {
   for (k in genic_structure)
@@ -194,7 +194,7 @@ depositgene<-function(chrom,genic_structure)
 }
 
 
-## Adding uniform expression
+## 4-2: Adding uniform expression
 depositexpression<-function(chrom,expression_structure)
 {
   for (k in expression_structure)
@@ -210,7 +210,7 @@ depositexpression<-function(chrom,expression_structure)
 }
 
 
-#### Adding K36me2 and K36me3
+#### 4-3: Adding K36me2 and K36me3
 
 ### First, defining the type of peak (how sharp or flat)
 shapeOfK36mark<-function(start,end,K36_slope)
@@ -229,7 +229,7 @@ shapeOfK36mark<-function(start,end,K36_slope)
 
 
 
-### depositing k36me2 mark based on the peak model
+### 4-4: depositing k36me2 mark based on the peak model
 depositk36me2<-function(chrom,k36me2_structure)
 {
   for (k in k36me2_structure)
@@ -251,7 +251,7 @@ depositk36me2<-function(chrom,k36me2_structure)
 }
 
 
-### depositing k36me3 mark based on the peak model
+### 4-5: depositing k36me3 mark based on the peak model
 depositk36me3<-function(chrom,k36me_structure)
 {
   for (k in k36me3_structure)
@@ -273,7 +273,7 @@ depositk36me3<-function(chrom,k36me_structure)
 }
 
 
-#### Adding K27M mutation
+#### 4-6: Adding K27M mutation
 ## below is the changed version based on the presence of H3.3 only in open chromatin i.e. expression_structure
 addk27m <- function(chrom,openchromatin)
 {
@@ -293,7 +293,7 @@ addk27m <- function(chrom,openchromatin)
   return(chrom)
 }
 
-#### PRC2 random-walking on the chromatin
+#### 4-7: PRC2 random-walking on the chromatin
 randomwalkme<-function(chromlength,maxstepsize,maxsteps)
 {
   d<-c()
@@ -343,11 +343,7 @@ chromatin[["chr"]]<-depositk36me3(chromatin[["chr"]],k36me3_structure)
 chromatin[["chr"]]<-addk27m(chromatin[["chr"]],openchromatin)
 
 
-
-
-
-
-#### Defining mitosis function
+#### 4-8: Defining mitosis function
 mitosis <- function (chromatin){
   for (i in 1:nrow(chromatin)) 
   {
@@ -375,14 +371,7 @@ mitosis <- function (chromatin){
 
 
 
-
-
-
-
-
-
-#### Depositing K27 me marks on each nucleosome ####
-
+#### 4-9: Depositing K27 me marks on each nucleosome
 deposit<-function(chromatin,nucleosomeNumber)
 {
   
