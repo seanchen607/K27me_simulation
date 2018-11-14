@@ -1,4 +1,4 @@
-## 1- Preparing Simulation
+#### 1- Preparing Simulation ####
 rm(list=ls())
 par(mfrow=c(1,1))
 
@@ -11,7 +11,7 @@ homedir="~/Desktop/Desktop_June_2018/Histone_Mark_Simulation/Constant_clock/"
 # Please do not change this, this is to avoid the scietific connotation in the results
 options(scipen=999)
 
-## 2- Defining parameters
+#### 2- Defining parameters ####
 # Length of the chromatin (i.e. number of uncleosomes)
 chromlength=1000
 
@@ -20,7 +20,7 @@ snapshot_interval=100
 
 
 # Population size (number of chromatins)
-populationSize=100
+populationSize=10
 
 # Keeping record of populations' different marks throughout the life-time.
 # This is a list that at each timer tick, a dataframe will be added to. These data frames contain the summation of the entire populations' 4 marks.
@@ -34,8 +34,8 @@ var_threshold=0.00001
 
 # Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
 # Note that adding me to higher methylation states is apparently harder thus the diffrence
-Tp00=0.05
-Tp01=0.95
+Tp00=0.08
+Tp01=0.92
 Tp02=0
 Tp03=0
 
@@ -43,11 +43,11 @@ Tp11=0.15
 Tp12=0.85
 Tp13=0
 
-Tp22=0.45
-Tp23=0.55
+Tp22=0.44
+Tp23=0.56
 
 # The probability of mitosis happening at any move of PRC2
-mitosis_prob=0.00015
+mitosis_prob=0.00008
 
 # Distribution of the genes, and other mark domains. It can be a list of several domains. Be careful with overlaps and going over the chromosome length
 genic_structure=list(c(980,1000))
@@ -151,7 +151,7 @@ hist(d, main = paste("n= ",n," ,mean= ",m," ,sd= ",s, " , min=",lwr," ,max= ",up
 
 
 
-#### Instructions for creating chromatin zero (with predefined Size and all the marks and structures set to 0)
+#### 3- Instructions for creating chromatin zero (with predefined Size and all the marks and structures set to 0) ####
 createNakedChromatin <- function(chromSize)
 {
   chromatin<-data.frame(integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),double(chromSize))
@@ -176,7 +176,7 @@ createNakedChromatin <- function(chromSize)
 }
 
 
-################################## Functions for modifying chromatin zero ##################################
+#### 4- Functions for modifying chromatin zero ####
 
 ## Adding genic structure
 depositgene<-function(chrom,genic_structure)
@@ -381,7 +381,7 @@ mitosis <- function (chromatin){
 
 
 
-###################################### Depositing K27 me marks on each nucleosome ######################################
+#### Depositing K27 me marks on each nucleosome ####
 
 deposit<-function(chromatin,nucleosomeNumber)
 {
@@ -494,10 +494,8 @@ k27mavg<-c()
 thispopulationk27mdistribution<-chromatin[["chr"]]$K27M
 
 
-#############################################################
-############### RUNNING POPULATION SIMULATION  ##############
-#############################################################
-### Setting up the population abd the simulation parameters
+#### 5- RUNNING POPULATION SIMULATION  ####
+# Setting up the population abd the simulation parameters
 
 stall=0
 prc2location=1
@@ -662,6 +660,7 @@ while (timer)
 print(paste("Number of mitosis: ",mitosis_count,sep=""))
 print(paste("Prc2 Rounds: ",prc2_round_counter,sep=""))
 
+#### 6- Plotting the average values ####
 
 par(mfrow=c(2,2))
 yaxis_marks<-seq(from = 0, to = timer, by = snapshot_interval)
@@ -675,6 +674,7 @@ plot(average_values3,type = "l",xaxt="n",xlab="Timer",ylab="me3")
 axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
 
 
+#### 7- Plotting the end chromatin situation ####
 
 plot_df<-data.frame(me0=integer(chromlength),me1=integer(chromlength),me2=integer(chromlength),me3=integer(chromlength))
 plot_df$me0=0
