@@ -1,4 +1,3 @@
-
 #### 1- Preparing Simulation ####
 rm(list=ls())
 par(mfrow=c(1,1))
@@ -21,7 +20,7 @@ snapshot_interval=100
 
 
 # Population size (number of chromatins)
-populationSize=10
+populationSize=100
 
 # Keeping record of populations' different marks throughout the life-time.
 # This is a list that at each timer tick, a dataframe will be added to. These data frames contain the summation of the entire populations' 4 marks.
@@ -51,14 +50,23 @@ Tp23=0.56
 mitosis_prob=0.00008
 
 # Distribution of the genes, and other mark domains. It can be a list of several domains. Be careful with overlaps and going over the chromosome length
-genic_structure=list(c(980,1000))
-expression_structure=list(c(980:1000))
-openchromatin=list(c(0:100))
-k36me2_structure=list(c(980,1000))
-k36me3_structure=list(c(980,1000))
+genic_structure=list(c(981,1000))
+expression_structure=list(c(981:1000))
+openchromatin=list(c(0:99),c(400:499))
+k36me2_structure=list(c(981,1000))
+k36me3_structure=list(c(981,1000))
 
 # 5% of the genome but mostly found in expressed genes (open chromatin regions)
-K27Mprobability=0.05
+K27Mprobability=0.5
+
+# likelihood of H3.3 to appear on a nucleosome in open chromatin
+h33probInOpenChr=0.8
+
+#Length of open chromatin
+openChrlength=sum(sapply(openchromatin, length))
+
+# Probability of H3 outside of oepn chromatin
+h33probInChr=(openChrlength-(openChrlength*h33probInOpenChr))/(chromlength-openChrlength)
 
 # The value below shows how long K27M in scale of timer ticks prc2location will stall the PRC2. In other words, if the probability of mitosis is 1/1000 and the value below is 1/10, that means K27M will stall PRC2 100 times more than its regular speed which is 1000 rounds per mitosis.
 stallingforK27M=50
@@ -155,8 +163,8 @@ hist(d, main = paste("n= ",n," ,mean= ",m," ,sd= ",s, " , min=",lwr," ,max= ",up
 #### 3- Instructions for creating chromatin zero (with predefined Size and all the marks and structures set to 0) ####
 createNakedChromatin <- function(chromSize)
 {
-  chromatin<-data.frame(integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),double(chromSize))
-  colnames(chromatin)<-c("N","S","me0","me1","me2","me3","K36me2","K36me3","genic","expression","K27M","prc2_falling_chance")
+  chromatin<-data.frame(integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),integer(chromSize),double(chromSize))
+  colnames(chromatin)<-c("N","S","me0","me1","me2","me3","K36me2","K36me3","genic","expression","h33","K27M","prc2_falling_chance")
   for (s in 1:chromSize)
   {
     chromatin$N[s]=s
@@ -169,6 +177,7 @@ createNakedChromatin <- function(chromSize)
     chromatin$K36me3[s]=0
     chromatin$genic[s]=0
     chromatin$expression[s]=0
+    chromatin$h33[s]=0
     chromatin$K27M=0
     chromatin$prc2_falling_chance=0
   }
@@ -274,21 +283,57 @@ depositk36me3<-function(chrom,k36me_structure)
 }
 
 
+####4-6-0: Distribution of H3.3 in Open chromatin
+## around 10% of the nucleosomes have H3.3 which are the histones that get mutated (with ~50% likelihood)
+## These histones are mainly concentrated in open chromatin (likelihoods can change). 
+## Thiss function defines the distribution of H3.3 (in open chromatin as long as rest of the genome with lower likelihood)
+
+
+
+addH33 <- function(chrom,openchromatin,h33probInChr,h33probInOpenChr)
+{
+  for (k in 1:nrow(chrom))
+  {
+    j=0
+    for (i in 1:length(openchromatin))
+    { 
+      if (k %in% openchromatin[[i]])
+      {
+      j=1
+      } 
+    }
+    
+    if(j==1)
+    {
+    
+      if (runif(n=1,min = 0,max=1) <= h33probInOpenChr)
+      {
+      chrom$h33[k]=1
+      }
+    }
+    else if(j==0)
+    {
+    if (runif(n=1,min = 0,max=1) <= h33probInChr)
+      {
+      chrom$h33[k]=1
+      }
+    }
+  }
+return(chrom)
+}
+
+
 #### 4-6: Adding K27M mutation
 ## below is the changed version based on the presence of H3.3 only in open chromatin i.e. expression_structure
-addk27m <- function(chrom,openchromatin)
+## around 10% of H3s are H3.3 and around half of them are mutated
+addk27m <- function(chrom)
 {
-  for (k in openchromatin)
+  for (k in 1:nrow(chrom))
   {
-    start=k[1]
-    end=k[length(openchromatin[k])]
-    for (q in start:end)
+    check=runif(n=1,min = 0,max=1)
+    if (check < K27Mprobability && chrom$h33[k]==1)
     {
-      check=runif(n=1,min = 0,max=1)
-      if (check < K27Mprobability)
-      {
-        chrom$K27M[q]=1
-      }
+      chrom$K27M[k]=1
     }
   }
   return(chrom)
@@ -341,7 +386,7 @@ chromatin[["chr"]]<-depositgene(chromatin[["chr"]],genic_structure)
 chromatin[["chr"]]<-depositexpression(chromatin[["chr"]],expression_structure)
 chromatin[["chr"]]<-depositk36me2(chromatin[["chr"]],k36me2_structure)
 chromatin[["chr"]]<-depositk36me3(chromatin[["chr"]],k36me3_structure)
-chromatin[["chr"]]<-addk27m(chromatin[["chr"]],openchromatin)
+
 
 
 #### 4-8: Defining mitosis function
@@ -501,8 +546,24 @@ for (p in 1:populationSize)
   population[[p]][["chr"]]<-depositk36me3(population[[p]][["chr"]],k36me3_structure)
   population[[p]][["chr"]]<-depositgene(population[[p]][["chr"]],genic_structure)
   population[[p]][["chr"]]<-depositexpression(population[[p]][["chr"]],expression_structure)
-  population[[p]][["chr"]]$K27M<-thispopulationk27mdistribution
+  population[[p]][["chr"]]<-addH33(population[[p]][["chr"]],openchromatin,h33probInChr,h33probInOpenChr)
+  population[[p]][["chr"]]<-addk27m(population[[p]][["chr"]])
+  
 }  
+
+## Testing the distribution of H3.3 and K27M
+populationTotal<-data.frame(integer(chromlength),integer(chromlength))
+colnames(populationTotal)<-c("h33","k27m")
+for (i in 1:populationSize)
+{
+  populationTotal$h33<-populationTotal$h33+population[[i]][["chr"]]$h33
+  populationTotal$k27m<-populationTotal$k27m+population[[i]][["chr"]]$K27M
+}
+par(mfrow=c(2,1))
+plot(populationTotal$h33/populationSize,ylim=c(0,1),type="h", ylab = "h3.3")
+plot(populationTotal$k27m/populationSize,ylim=c(0,1),type="h",ylab="k27m")
+## End of test
+
 
 ## Initializing the plotting events
 population_Marks_sum<-data.frame(me0=integer(chromlength),me1=integer(chromlength),me2=integer(chromlength),me3=integer(chromlength))
