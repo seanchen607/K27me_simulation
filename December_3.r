@@ -29,7 +29,7 @@ populationSize=100
 population_history<-list()
 
 # Maximum number of cycles (maximum) before the simulation stops. This will reach only if we don't get to a steady state before
-life=10
+life=50
 var_threshold=0.00001
 
 # Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
@@ -53,8 +53,8 @@ mitosis_prob=0.000001
 genic_structure=list(c(981,1000))
 expression_structure=list(c(981:1000))
 openchromatin=list(c(0:99),c(400:499))
-k36me2_structure=list(c(981,1000))
-k36me3_structure=list(c(981,1000))
+k36me2_structure=list(c(701,850))
+k36me3_structure=list(c(701,850))
 
 # 5% of the genome but mostly found in expressed genes (open chromatin regions)
 K27Mprobability=0.5
@@ -72,10 +72,10 @@ h33probInChr=(openChrlength-(openChrlength*h33probInOpenChr))/(chromlength-openC
 stallingforK27M=50
 
 # How much K36me2 affects the deposition of K27me3 (zero= completely prevents it, 1= not affecting at all) This value will be multiplied by the probability of the deposition, thus closer to 0 means lowering the probability more.
-k36me2Effect=0.2
+k36me2Effect=0.9
 
 # How much K36me3 affects the deposition of K27me3 (zero= completely prevents it, 1= not affecting at all) This value will be multiplied by the probability of the deposition, thus closer to 0 means lowering the probability more.
-k36me3Effect=0.1
+k36me3Effect=0.6
 
 # Peakiness of K36me2 and K36me3 [0,0.1] (0 is a uniform block, 0.1 is a very sharp peak)
 K36_slope=0.0005
@@ -776,7 +776,4 @@ plot(plot_df$me3,ylim=c(0,1),ylab = "me3",type = "h")
 
 
 
-
-
-### ToDo: To put back the effectors on the probability of depositing marks such as K36me2,3 
 ### ToDo: To put back the effect of neighboring nucleosomes (last step)
