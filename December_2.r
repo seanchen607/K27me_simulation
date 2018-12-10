@@ -16,7 +16,7 @@ options(scipen=999)
 chromlength=1000
 
 # For the purpose of plotting
-snapshot_interval=100
+snapshot_interval=1000
 
 
 # Population size (number of chromatins)
@@ -29,7 +29,7 @@ populationSize=100
 population_history<-list()
 
 # Maximum number of cycles (maximum) before the simulation stops. This will reach only if we don't get to a steady state before
-life=10000
+life=10
 var_threshold=0.00001
 
 # Transition probabilities, the first number is the current state the second number os the next state, e.g. Tp01 means the probability of transitioning from K27me0 to K27me1 and so on.
@@ -47,7 +47,7 @@ Tp22=0.44
 Tp23=0.56
 
 # The probability of mitosis happening at any move of PRC2
-mitosis_prob=0.00008
+mitosis_prob=0.000001
 
 # Distribution of the genes, and other mark domains. It can be a list of several domains. Be careful with overlaps and going over the chromosome length
 genic_structure=list(c(981,1000))
@@ -80,14 +80,17 @@ k36me3Effect=0
 # Peakiness of K36me2 and K36me3 [0,0.1] (0 is a uniform block, 0.1 is a very sharp peak)
 K36_slope=0.0005
 
-# Slope of PRC2 falling off [0,0.1] (0 is a non-falling off, 0.1 is a very sharp slope)
-prc2_slop=0.0005
-
 # This factor indicates how big the previous nucleosome's status affects the deposition of K27me3. i.e. 2 means it makes it twice as likely, 10 means times likely etc.
 neighborK27me3bonus=10
 
-# Set this to zero if you want to avoid random walk movement for PRC2 and 1 if you want the random walk as the prc2 movement model with the parameters set below
-randomwk=0
+# Prc2 movement model (0=sequenctial from nucleosome 1, 1=random walk, 2=random association)
+prc2MovementModel=2
+
+# Slope of PRC2 falling off [0,0.1] (0 is a non-falling off, 0.1 is a very sharp slope)
+prc2_slop=0.0005
+if(prc2MovementModel==2)
+{prc2_slop=0.0}
+
 
 # If the random walk model is set, this value sets the maximum number of steps for PRC2 before it falls off the chromatin
 maximumsteps=10000
@@ -100,7 +103,7 @@ stepsize=10
 
 
 # Creating a directory to save the plots
-#newdir=paste(homedir,this_version,"-",gsub(":","_",gsub(" ","-",date())),"-","chrmlngth_",chromlength,"-pop_",populationSize,"-add01-12-23_0213-",Tp01,"-",Tp12,"-",Tp23,"-",Tp02,"-mitosis_prob_",mitosis_prob,"_Randomwalk_",randomwk,"_neighbor_",neighborK27me3bonus,"x","/",sep = "")
+#newdir=paste(homedir,this_version,"-",gsub(":","_",gsub(" ","-",date())),"-","chrmlngth_",chromlength,"-pop_",populationSize,"-add01-12-23_0213-",Tp01,"-",Tp12,"-",Tp23,"-",Tp02,"-mitosis_prob_",mitosis_prob,"_Randomwalk_",prc2MovementModel,"_neighbor_",neighborK27me3bonus,"x","/",sep = "")
 #system(paste("mkdir -p ",newdir,sep = ""))
 #system(paste("mkdir -p ",newdir,"cell1/",sep = ""))
 #setwd(newdir)
@@ -369,14 +372,16 @@ plot(test,type="l",ylab = paste("Distance; max dist = ",max(test),sep=""),xlab =
 
 
 ## If randomwalk is chosen for PRC2 move, the "PRC2moveVector" variable which is an vector made of randomwalked variables will be the order of PRC2 moves, otherwise, if randomwalk is set to zero, it'll be a vector of 0 to size of the chromatin.
-if (randomwk==0)
+if (prc2MovementModel==0)
 {
   PRC2moveVector=c(1:chromlength)
-} else 
+} else if(prc2MovementModel==1)
 {
   PRC2moveVector=randomwalkme(chromlength,stepsize,maximumsteps)
+} else if (prc2MovementModel==2)
+{
+  PRC2moveVector=sample(c(1:chromlength),size = life*snapshot_interval,replace = TRUE)
 }
-
 
 #### Creating chromatin zero
 chromatin<-createNakedChromatin(chromlength)
@@ -581,24 +586,29 @@ average_values3<-c()
 # Begginning of timer's life
 prc2pathindex=1
 breaking=0
-while (timer)
+while (timer <= life*snapshot_interval)
 {
   
-  if(prc2location%%1000==0 || prc2location==1){print (paste("Timer: ",timer," > prc2location: ",prc2location,sep = ""))}
+  if(prc2location%%chromlength==0 || prc2location==1){print (paste("Timer: ",timer," > prc2location: ",prc2location,sep = ""))}
   
   ### Check if the prc2 has reached the end of chromosome and if so, reset it to first nucleosome  
-  if ((prc2location-1) %% chromlength == 0) 
+  if ((prc2location-1) %% chromlength == 0 && prc2MovementModel<2) 
   {
-    if(randomwk==1){
+    if(prc2MovementModel==1){
       prc2path<-randomwalkme(chromlength,stepsize,life)
-    } else if (randomwk==0) {prc2path<-c(1:chromlength)}
+    } else if (prc2MovementModel==0) {prc2path<-c(1:chromlength)}
     
     prc2pathindex=1
     prc2location=1
     prc2_round_counter=prc2_round_counter+1
     
   }
-  
+  ###NEW
+  if (prc2MovementModel==2) 
+  {
+  prc2path<-PRC2moveVector
+  prc2_round_counter=prc2_round_counter+1
+  }
   ### Checking out if PRC2 is still attached
   
   
@@ -630,7 +640,7 @@ while (timer)
         population[[p]][["chr"]]<-mitosis(population[[p]][["chr"]])
         mitosis_count=mitosis_count+1
         mitosis_chance=0
-        print(paste("individual: ",p," > timer: ",timer," > prc2 round: ",prc2_round_counter,sep=""))
+        print(paste("individual: ",p," > timer: ",timer," > prc2 attachment: ",prc2_round_counter,sep=""))
       }
       if(prc2location%%snapshot_interval==0 || timer==1)
       {      
