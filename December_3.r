@@ -439,7 +439,7 @@ deposit<-function(chromatin,nucleosomeNumber)
   if (chromatin[["chr"]]$S[nucleosomeNumber] == 0)
   {
     #If the random generate number falls between zero and Tp00 (times the chance of falling off) nothing changes
-    if (rando < Tp00*k36me2penalty && rando < Tp00*k36me3penalty)
+    if (rando < Tp00)
     {
       chromatin[["chr"]]$S[nucleosomeNumber]=0
       chromatin[["chr"]]$me0[nucleosomeNumber]=1
@@ -474,7 +474,7 @@ deposit<-function(chromatin,nucleosomeNumber)
   }
   ## Same story as above if the current state is 1
   else if (chromatin[["chr"]]$S[nucleosomeNumber] == 1)  {
-    if(rando < Tp11*k36me2penalty && rando < Tp11*k36me3penalty)
+    if(rando < Tp11)
     {
       chromatin[["chr"]]$S[nucleosomeNumber]=1
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
@@ -497,7 +497,7 @@ deposit<-function(chromatin,nucleosomeNumber)
   } 
   ## Same story as above if the current state is 2, except here we have the bonus for the previous nucleosome having K27me3 mark
   else if (chromatin[["chr"]]$S[nucleosomeNumber] == 2)  {
-    if(rando < Tp22*k36me2penalty && rando < Tp22*k36me3penalty)
+    if(rando < Tp22)
     {
       chromatin[["chr"]]$S[nucleosomeNumber]=2
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
@@ -773,6 +773,8 @@ plot(plot_df$me0,ylim=c(0,1),ylab = "me0",type = "h")
 plot(plot_df$me1,ylim=c(0,1),ylab = "me1",type = "h")
 plot(plot_df$me2,ylim=c(0,1),ylab = "me2",type = "h")
 plot(plot_df$me3,ylim=c(0,1),ylab = "me3",type = "h")
+
+
 
 
 
