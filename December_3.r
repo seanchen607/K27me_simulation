@@ -72,10 +72,10 @@ h33probInChr=(openChrlength-(openChrlength*h33probInOpenChr))/(chromlength-openC
 stallingforK27M=50
 
 # How much K36me2 affects the deposition of K27me3 (zero= completely prevents it, 1= not affecting at all) This value will be multiplied by the probability of the deposition, thus closer to 0 means lowering the probability more.
-k36me2Effect=0.1
+k36me2Effect=0.2
 
 # How much K36me3 affects the deposition of K27me3 (zero= completely prevents it, 1= not affecting at all) This value will be multiplied by the probability of the deposition, thus closer to 0 means lowering the probability more.
-k36me3Effect=0
+k36me3Effect=0.1
 
 # Peakiness of K36me2 and K36me3 [0,0.1] (0 is a uniform block, 0.1 is a very sharp peak)
 K36_slope=0.0005
@@ -427,14 +427,19 @@ deposit<-function(chromatin,nucleosomeNumber)
 {
   
   #choosing a random number between 0 and 1 for testing with the probability of each scenario
-  rando=runif(n=1,min=0,max=1)  
+  rando=runif(n=1,min=0,max=1) 
   
+  k36me2penalty=k36me3penalty=0
+  if(chromatin[["chr"]]$K36me2[nucleosomeNumber]==1)
+  {k36me2penalty=k36me2Effect}
+  if(chromatin[["chr"]]$K36me3[nucleosomeNumber]==1)
+  {k36me3penalty=k36me3Effect}
   
   #When PRC2 makes it to each nucleosome, checks the current state (S). If the current state shows no K27me (1,2, or 3)   
   if (chromatin[["chr"]]$S[nucleosomeNumber] == 0)
   {
     #If the random generate number falls between zero and Tp00 (times the chance of falling off) nothing changes
-    if (rando < Tp00)
+    if (rando < Tp00*k36me2penalty && rando < Tp00*k36me3penalty)
     {
       chromatin[["chr"]]$S[nucleosomeNumber]=0
       chromatin[["chr"]]$me0[nucleosomeNumber]=1
@@ -443,7 +448,7 @@ deposit<-function(chromatin,nucleosomeNumber)
       chromatin[["chr"]]$me3[nucleosomeNumber]=0
     } 
     # If it falls between zero and Tp01(*fall off chance), changes the S from 0 to 1
-    else if(rando < Tp01) {
+    else if(rando < Tp01*k36me2penalty && rando < Tp01*k36me3penalty) {
       chromatin[["chr"]]$S[nucleosomeNumber]=1
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
       chromatin[["chr"]]$me1[nucleosomeNumber]=1
@@ -451,7 +456,7 @@ deposit<-function(chromatin,nucleosomeNumber)
       chromatin[["chr"]]$me3[nucleosomeNumber]=0
     } 
     # If it falls between zero and Tp02(*fall off chance), changes the S from 0 to 2
-    else  if(rando < Tp02) {
+    else  if(rando < Tp02*k36me2penalty && rando < Tp02*k36me3penalty) {
       chromatin[["chr"]]$S[nucleosomeNumber]=2
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
       chromatin[["chr"]]$me1[nucleosomeNumber]=0
@@ -459,7 +464,7 @@ deposit<-function(chromatin,nucleosomeNumber)
       chromatin[["chr"]]$me3[nucleosomeNumber]=0
     } 
     # If it falls between zero and Tp03(*fall off chance), changes the S from 0 to 3
-    else  if(rando < Tp03) {
+    else  if(rando < Tp03*k36me2penalty && rando < Tp03*k36me3penalty) {
       chromatin[["chr"]]$S[nucleosomeNumber]=3
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
       chromatin[["chr"]]$me1[nucleosomeNumber]=0
@@ -469,20 +474,20 @@ deposit<-function(chromatin,nucleosomeNumber)
   }
   ## Same story as above if the current state is 1
   else if (chromatin[["chr"]]$S[nucleosomeNumber] == 1)  {
-    if(rando < Tp11)
+    if(rando < Tp11*k36me2penalty && rando < Tp11*k36me3penalty)
     {
       chromatin[["chr"]]$S[nucleosomeNumber]=1
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
       chromatin[["chr"]]$me1[nucleosomeNumber]=1
       chromatin[["chr"]]$me2[nucleosomeNumber]=0
       chromatin[["chr"]]$me3[nucleosomeNumber]=0
-    } else if(rando < Tp12) {
+    } else if(rando < Tp12*k36me2penalty && rando < Tp12*k36me3penalty) {
       chromatin[["chr"]]$S[nucleosomeNumber]=2
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
       chromatin[["chr"]]$me1[nucleosomeNumber]=0
       chromatin[["chr"]]$me2[nucleosomeNumber]=1
       chromatin[["chr"]]$me3[nucleosomeNumber]=0
-    } else  if(rando < Tp13) {
+    } else  if(rando < Tp13*k36me2penalty && rando < Tp13*k36me3penalty) {
       chromatin[["chr"]]$S[nucleosomeNumber]=3
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
       chromatin[["chr"]]$me1[nucleosomeNumber]=0
@@ -492,14 +497,14 @@ deposit<-function(chromatin,nucleosomeNumber)
   } 
   ## Same story as above if the current state is 2, except here we have the bonus for the previous nucleosome having K27me3 mark
   else if (chromatin[["chr"]]$S[nucleosomeNumber] == 2)  {
-    if(rando < Tp22)
+    if(rando < Tp22*k36me2penalty && rando < Tp22*k36me3penalty)
     {
       chromatin[["chr"]]$S[nucleosomeNumber]=2
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
       chromatin[["chr"]]$me1[nucleosomeNumber]=0
       chromatin[["chr"]]$me2[nucleosomeNumber]=1
       chromatin[["chr"]]$me3[nucleosomeNumber]=0
-    } else if(rando < Tp23)  {
+    } else if(rando < Tp23*k36me2penalty && rando < Tp23*k36me3penalty)  {
       chromatin[["chr"]]$S[nucleosomeNumber]=3
       chromatin[["chr"]]$me0[nucleosomeNumber]=0
       chromatin[["chr"]]$me1[nucleosomeNumber]=0
@@ -720,17 +725,17 @@ print(paste("Prc2 Rounds: ",prc2_round_counter,sep=""))
 
 #### 6- Plotting the average values ####
 
-par(mfrow=c(2,2))
-yaxis_marks<-seq(from = 0, to = timer, by = snapshot_interval)
-plot(average_values0,type = "l",xaxt="n",xlab="Timer",ylab="me0",ylim=c(0,1.2))
-axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
-plot(average_values1,type = "l",xaxt="n",xlab="Timer",ylab="me1")
-axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
-plot(average_values2,type = "l",xaxt="n",xlab="Timer",ylab="me2")
-axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
-plot(average_values3,type = "l",xaxt="n",xlab="Timer",ylab="me3")
-axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
-
+# par(mfrow=c(2,2))
+# yaxis_marks<-seq(from = 0, to = timer, by = snapshot_interval)
+# plot(average_values0,type = "l",xaxt="n",xlab="Timer",ylab="me0",ylim=c(0,1.2))
+# axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
+# plot(average_values1,type = "l",xaxt="n",xlab="Timer",ylab="me1")
+# axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
+# plot(average_values2,type = "l",xaxt="n",xlab="Timer",ylab="me2")
+# axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
+# plot(average_values3,type = "l",xaxt="n",xlab="Timer",ylab="me3")
+# axis(1, at=(yaxis_marks/snapshot_interval), labels=yaxis_marks) 
+# 
 
 #### 7- Plotting the end chromatin situation ####
 
@@ -739,7 +744,8 @@ plot_df$me0=0
 plot_df$me1=0
 plot_df$me2=0
 plot_df$me3=0
-
+plot_df$k36me2=0
+plot_df$k36me3=0
 
 
 for (i in 1:populationSize)
@@ -748,17 +754,27 @@ for (i in 1:populationSize)
   plot_df$me1<-plot_df$me1+population[[i]][["chr"]]$me1
   plot_df$me2<-plot_df$me2+population[[i]][["chr"]]$me2
   plot_df$me3<-plot_df$me3+population[[i]][["chr"]]$me3
-  
+  plot_df$k36me2<-plot_df$k36me2+population[[i]][["chr"]]$K36me2
+  plot_df$k36me3<-plot_df$k36me3+population[[i]][["chr"]]$K36me3
 }
 
 plot_df<-plot_df/populationSize
-par(mfrow=c(6,1))
+
+
+par(mfrow=c(4,1))
+plot(populationTotal$h33/populationSize,ylim=c(0,1),type="h", ylab = "h3.3")
+plot(populationTotal$k27m/populationSize,ylim=c(0,1),type="h",ylab="k27m")
+plot(plot_df$k36me2,ylim=c(0,1),ylab = "k36me2",type = "h")
+plot(plot_df$k36me3,ylim=c(0,1),ylab = "k36me3",type = "h")
+
+
+par(mfrow=c(4,1))
 plot(plot_df$me0,ylim=c(0,1),ylab = "me0",type = "h")
 plot(plot_df$me1,ylim=c(0,1),ylab = "me1",type = "h")
 plot(plot_df$me2,ylim=c(0,1),ylab = "me2",type = "h")
 plot(plot_df$me3,ylim=c(0,1),ylab = "me3",type = "h")
-plot(populationTotal$h33/populationSize,ylim=c(0,1),type="h", ylab = "h3.3")
-plot(populationTotal$k27m/populationSize,ylim=c(0,1),type="h",ylab="k27m")
+
+
 
 
 
